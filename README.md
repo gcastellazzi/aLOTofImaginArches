@@ -10,6 +10,8 @@ The software is available as open-source.
 
 By sharing these resources, I hope to gather feedback and suggestions that will improve their usefulness for everyone.
 
+|![The study of Giovanni Poleni about S. Peter Dome](https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Examples/Example_Poleni.png "The study of Giovanni Poleni about S. Peter Dome")|
+
 ## Documentation
 
 Several examples are already available in the Example folder.
@@ -19,7 +21,7 @@ A simple user guide for the software can be found [here for the use of Loads and
 
 ## Future developments
 ```
-- Support for variable arch thickness
-- Handling of multiple units
+- Mechanism detection usin LOT
+- Fiber reinforced enhancement
 ```
 
