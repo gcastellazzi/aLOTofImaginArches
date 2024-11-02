@@ -2,7 +2,7 @@
 
 aLOTofImagineArches is an educational software that allows for interactive demonstrations that involve the user in experimentation with the funicular solution concept. The tool is designed for the master students of the courses MHMS and HMWS and is mainly useful to capture the idea of ∞³ funicular solutions for masonry arches.
 
-|![Logo aLOTofImagineArches](https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Examples/aLOT.png "Logo aLOTofImagineArches")|
+|<img src="https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Examples/aLOT.png" alt="Logo aLOTofImagineArches" title="Logo aLOTofImagineArches" width="300"/>|
 
 ## Rationale
 
