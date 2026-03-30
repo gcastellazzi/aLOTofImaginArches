@@ -207,6 +207,11 @@ if isempty(h.Position)
     if ~isempty(h.Waypoints)
         warning(message('images:imroi:unusedParameter','Waypoints'));
     end
-    figure(ancestor(h,'figure'))
+    parentFig = ancestor(h,'figure');
+    try
+        focus(parentFig);
+    catch
+        figure(parentFig)
+    end
     h.draw;
 end
