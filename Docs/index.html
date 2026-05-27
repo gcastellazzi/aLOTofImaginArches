@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>aLOTofImaginArches — User Guide</title>
+  <meta name="description" content="User guide for the MATLAB educational app aLOTofImaginArches: funicular analysis and line of thrust for masonry arches.">
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #1e4d8c;
+      --accent-soft: #e8f0fa;
+      --border: #e5e7eb;
+      --code-bg: #f3f4f6;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+      --max: 980px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    header {
+      background: linear-gradient(135deg, #163a6b 0%, #1e4d8c 55%, #2b6cb0 100%);
+      color: #fff;
+      padding: 2.5rem 1.25rem 2rem;
+    }
+
+    header .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    header img {
+      width: 110px;
+      height: auto;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.35rem;
+    }
+
+    header h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      line-height: 1.2;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.92;
+      max-width: 52rem;
+    }
+
+    nav.toc {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav.toc .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      font-size: 0.92rem;
+    }
+
+    nav.toc a {
+      color: var(--accent);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    nav.toc a:hover { text-decoration: underline; }
+
+    main {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 1.45rem;
+      border-bottom: 2px solid var(--accent-soft);
+      padding-bottom: 0.45rem;
+    }
+
+    h3 {
+      margin-top: 1.5rem;
+      font-size: 1.08rem;
+      color: #111827;
+    }
+
+    p, li { color: #374151; }
+
+    ul, ol { padding-left: 1.25rem; }
+
+    li { margin: 0.35rem 0; }
+
+    code, kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+      background: var(--code-bg);
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+    }
+
+    figure {
+      margin: 1.25rem 0;
+      padding: 0;
+    }
+
+    figure img {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: block;
+    }
+
+    figcaption {
+      margin-top: 0.55rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .callout {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 0.85rem 1rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    .callout strong { color: var(--accent); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f9fafb;
+      color: #111827;
+    }
+
+    .steps li { margin-bottom: 0.5rem; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    footer {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 1.25rem 3rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    footer a { color: var(--accent); }
+
+    @media (max-width: 640px) {
+      header .wrap { grid-template-columns: 1fr; text-align: center; }
+      header img { margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <img src="images/logo.png" alt="aLOTofImaginArches logo">
+      <div>
+        <h1>aLOTofImaginArches — User Guide</h1>
+        <p>
+          Interactive educational software for masonry arches: define geometry, build the force polygon,
+          and explore the line of thrust (LOT) and funicular solutions.
+          Designed for graduate courses in masonry and historical structures (MHMS, HMWS).
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="wrap">
+      <a href="#requirements">Requirements</a>
+      <a href="#interface">Interface</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#arch-definition">Arch Definition</a>
+      <a href="#thrust-line">Thrust Line</a>
+      <a href="#graphics">Graphics &amp; Units</a>
+      <a href="#examples">Examples</a>
+      <a href="#pdf-guides">PDF guides</a>
+      <a href="#tips">Tips</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="requirements">
+      <h2>Requirements &amp; launch</h2>
+      <ol>
+        <li>Install <strong>MATLAB R2019a</strong> or later (App Designer app).</li>
+        <li>Clone or download this repository.</li>
+        <li>Add the repository folder to the MATLAB path, or open the project from that folder.</li>
+        <li>Run the app:
+          <ul>
+            <li>Double-click <code>aLOTofImaginArches.mlapp</code> in the MATLAB Current Folder browser, or</li>
+            <li>From the command window: <code>app = aLOTofImaginArches;</code></li>
+          </ul>
+        </li>
+      </ol>
+      <div class="callout">
+        <strong>External functions:</strong> keep the <code>external_functions/</code> folder on the path
+        (same directory as the <code>.mlapp</code> file). The app uses helpers for intersections, arrows,
+        freehand selection, and the admissible domain.
+      </div>
+    </section>
+
+    <section id="interface">
+      <h2>Main interface</h2>
+      <p>
+        The window is organized around three main tabs on the left, a central interactive plot,
+        and auxiliary views on the right (3D view and force polygon).
+      </p>
+
+      <figure>
+        <img src="images/app_screenshot.png" alt="Main window of aLOTofImaginArches showing Arch Definition tab, central plot, and side panels">
+        <figcaption>Main window — <em>Arch Definition</em> tab with block-based geometry controls.</figcaption>
+      </figure>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Left tabs</strong></td>
+            <td><em>Arch Definition</em>, <em>Thrust Line</em>, <em>Mechanism</em> — model setup and analysis.</td>
+          </tr>
+          <tr>
+            <td><strong>Central plot</strong></td>
+            <td>Geometry, blocks, forces, reactions, sketch, background image, line of thrust.</td>
+          </tr>
+          <tr>
+            <td><strong>Bottom panel</strong></td>
+            <td><em>Graphics</em>, <em>Save/Load Example</em>, material properties, <em>Units</em>.</td>
+          </tr>
+          <tr>
+            <td><strong>Right panel</strong></td>
+            <td><em>3D View</em> and <em>Force Polygon (FP)</em> for visualizing resultants.</td>
+          </tr>
+          <tr>
+            <td><strong>Block data table</strong></td>
+            <td>Block number, area <em>A</em>, thickness <em>t</em>, weight <em>W</em>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Plot toolbar</h3>
+      <ul>
+        <li><strong>Reset View</strong> — restore default axis limits.</li>
+        <li><strong>Pan</strong> — move the view without changing data.</li>
+        <li><strong>Scroll Zoom on/off</strong> — enable or disable mouse-wheel zoom.</li>
+        <li><strong>Show Structural scale</strong> — display a reference length on the plot.</li>
+      </ul>
+    </section>
+
+    <section id="workflow">
+      <h2>Recommended workflow</h2>
+      <ol class="steps">
+        <li>Set <strong>Units</strong> (SI, N·mm, kg·cm, …) in the bottom panel.</li>
+        <li>Define the arch geometry under <strong>Arch Definition</strong> (blocks, circular, or sketch).</li>
+        <li>Assign block thickness and material properties; use <strong>Plot blocks</strong> to verify.</li>
+        <li>Switch to <strong>Thrust Line</strong>: define springing points A and B, then build preliminary and final force polygons (FOP/FUP).</li>
+        <li>Explore horizontal thrust with the slider and inspect the line of thrust.</li>
+        <li>Save your session from <strong>Save/Load Example</strong>, or open a prepared <code>.mat</code> file from <code>Examples/</code>.</li>
+      </ol>
+
+      <figure>
+        <img src="images/example_funicular.png" alt="Funicular analysis result with force polygon and arch blocks">
+        <figcaption>Typical result: funicular polygon and thrust line on a block model.</figcaption>
+      </figure>
+    </section>
+
+    <section id="arch-definition">
+      <h2>Arch Definition</h2>
+      <p>
+        Under <em>Arch Definition</em>, choose one of three sub-tabs:
+        <strong>by Blocks</strong>, <strong>Circular</strong>, or <strong>by Sketch</strong>.
+        You can also use <strong>Load Data</strong> to import existing block data.
+      </p>
+
+      <h3>by Blocks</h3>
+      <ul>
+        <li><strong>Add rectangular block</strong> / <strong>Add irregular Block</strong> — create voussoirs interactively on the plot.</li>
+        <li><strong>Update data</strong> — refresh block areas, centroids, and weights after edits.</li>
+        <li><strong>Plot Geometry</strong> — draw the current block outline.</li>
+        <li><strong>View/Edit block data</strong> — open the block table for manual edits.</li>
+        <li><strong>Move Block Node</strong>, <strong>Translate Blocks</strong>, <strong>Scale Blocks</strong> — geometric editing tools.</li>
+        <li><strong>Delete all</strong> / <strong>Delete by N.</strong> — remove blocks.</li>
+        <li><strong>Poleni hp.</strong> — toggle Poleni-style horizontal projection aids (useful for dome/arch teaching examples).</li>
+      </ul>
+
+      <h3>Circular arch</h3>
+      <ol class="steps">
+        <li>Click <strong>Define Center</strong> and pick the arch centre on the plot.</li>
+        <li>Set inner/outer radius, start/end angles, number of blocks, and thickness.</li>
+        <li>Click <strong>Calculate Arch</strong> to generate voussoirs along the arc.</li>
+      </ol>
+      <p>See the step-by-step PDF in <a href="#pdf-guides">PDF guides</a> for a full circular-arch tutorial.</p>
+
+      <h3>by Sketch</h3>
+      <ol class="steps">
+        <li><strong>Load image</strong> — import a reference photo or drawing (optional).</li>
+        <li><strong>Pick Reference</strong> — set scale by clicking two points and entering the real distance.</li>
+        <li><strong>Flip X</strong> / <strong>Flip Y</strong> / <strong>Scale Image</strong> — align the background.</li>
+        <li><strong>Sketch the arch</strong> — draw the intrados/extrados freehand.</li>
+        <li><strong>Define Center</strong>, then <strong>Define Left</strong> and <strong>Define Right</strong> springing regions as prompted.</li>
+        <li>Set subdivision count and click <strong>Compute blocks</strong>.</li>
+      </ol>
+
+      <h3>Background image</h3>
+      <p>
+        When a background is loaded, use the <em>Graphics</em> tab switches to show/hide it and
+        <strong>Plot Background Image</strong> to refresh. <strong>Flip Y axis</strong> inverts the plot
+        if your image coordinate system differs from the structural axes.
+      </p>
+    </section>
+
+    <section id="thrust-line">
+      <h2>Thrust Line</h2>
+      <p>
+        This tab connects geometry to statics: you define supports, build force polygons, and study
+        how horizontal thrust changes the admissible line of thrust inside the masonry.
+      </p>
+
+      <ol class="steps">
+        <li><strong>Define Point A</strong> and <strong>Define Point B</strong> — springing locations (click on the plot).</li>
+        <li><strong>Preliminar FOP</strong> / <strong>Preliminar FUP</strong> — preliminary lower/upper funicular envelopes.</li>
+        <li><strong>Final FOP</strong> / <strong>Final FUP</strong> — refined polygons after block weights and geometry are set.</li>
+        <li><strong>Plot Reactions</strong> — show support resultants.</li>
+        <li>Use the <strong>horizontal thrust slider</strong> (set limits with <strong>Update Slider</strong>) to sweep thrust and update the LOT.</li>
+        <li><strong>Inspect Line of thrust</strong> — detailed inspection of LOT segments.</li>
+        <li><strong>Check admissbility</strong> — verify whether the thrust line stays inside the block kernel.</li>
+        <li><strong>Plot Cable analogy</strong> — inverted funicular (hanging chain) visualization.</li>
+      </ol>
+
+      <p>
+        Force resultants appear in the <strong>Force Polygon (FP)</strong> panel on the right.
+        Adjust <strong>Force shrink factor</strong> if arrows or polygon edges overlap.
+      </p>
+
+      <div class="grid-2">
+        <figure>
+          <img src="images/example_funicular_poleni.png" alt="Poleni-style funicular study with thrust line">
+          <figcaption>Poleni-style funicular study.</figcaption>
+        </figure>
+        <figure>
+          <img src="images/example_poleni.png" alt="Historical Poleni dome study reproduced in the software">
+          <figcaption>Historical Poleni dome study (teaching example).</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="graphics">
+      <h2>Graphics, units &amp; material properties</h2>
+
+      <h3>Graphics tab</h3>
+      <ul>
+        <li><strong>Plot blocks</strong>, <strong>Plot Forces</strong>, <strong>Plot Reactions</strong>, <strong>Plot Sketch</strong></li>
+        <li><strong>Clear Interactive Area</strong> / <strong>Clear Sketch</strong> — reset overlays (not block data).</li>
+        <li><strong>forces factor</strong> and <strong>alpha W</strong> — scale force arrows and weight display.</li>
+        <li>Switches: <strong>Force Magnitude</strong>, <strong>Background Image</strong>, <strong>Sketched Geometry</strong>, <strong>Text/Labels</strong>.</li>
+        <li><strong>Show Force Scale</strong> — reference for force arrow length.</li>
+      </ul>
+
+      <h3>Units tab</h3>
+      <p>
+        Presets include <strong>SI</strong>, <strong>Nmm</strong>, <strong>kg cm</strong>, and individual units for length, mass, force, and pressure.
+        The status line under the main plot shows the active unit system, e.g.
+        <code>Current units: [ m ] [ kg ] [ N ] [ Pa ]</code>.
+      </p>
+
+      <h3>Blocks Material properties</h3>
+      <p>
+        Set specific weight and block thickness defaults. Use <strong>Define Thickness</strong> or edit the block table
+        for per-block overrides. Weights update when you click <strong>Update data</strong>.
+      </p>
+
+      <h3>Mechanism tab</h3>
+      <p>
+        Tools for mechanism and limit analysis (development area). Use together with LOT inspection when
+        teaching collapse mechanisms.
+      </p>
+    </section>
+
+    <section id="examples">
+      <h2>Examples &amp; save/load</h2>
+      <p>
+        Prepared models live in the repository folder <code>Examples/</code>. From the app:
+      </p>
+      <ol>
+        <li><strong>Load Examples folder</strong> — point to the <code>Examples</code> directory.</li>
+        <li><strong>Open Example</strong> — load a <code>.mat</code> file (<code>saved_variables</code> structure).</li>
+        <li><strong>Save to folder Examples</strong> — export your current session.</li>
+      </ol>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Example file (selection)</th>
+            <th>Topic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Example_1_Circular_arch_comparison.mat</code></td><td>Circular arch, comparison cases</td></tr>
+          <tr><td><code>Example_3_Heyman_arch.mat</code></td><td>Heyman arch</td></tr>
+          <tr><td><code>Example_4_Amiens.mat</code></td><td>Amiens cathedral arch</td></tr>
+          <tr><td><code>Poleni_Example*.mat</code></td><td>Poleni dome / arch studies</td></tr>
+          <tr><td><code>Utah_Arch.mat</code></td><td>Landscape / Utah arch sketch workflow</td></tr>
+          <tr><td><code>Ctesifonte_01.mat</code>, <code>Ctesifonte_02.mat</code></td><td>Historical case studies</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="pdf-guides">
+      <h2>Step-by-step PDF guides</h2>
+      <p>
+        These click-by-click PDFs complement this page (same content as linked from the repository README):
+      </p>
+      <ul>
+        <li><a href="../Docs/Load_Graphics_Units.pdf">Loads, graphics &amp; units</a></li>
+        <li><a href="../Docs/Example_Circular_arch_construction.pdf">Building a circular arch</a></li>
+        <li><a href="../Docs/Example_Sketched_arch_construction.pdf">Building a sketched arch</a></li>
+      </ul>
+      <div class="callout">
+        On GitHub Pages, PDF links open from the repository browser:
+        use the <code>Docs/</code> folder in the
+        <a href="https://github.com/gcastellazzi/aLOTofImaginArches">GitHub repository</a>.
+      </div>
+    </section>
+
+    <section id="tips">
+      <h2>Tips &amp; troubleshooting</h2>
+      <ul>
+        <li>Always <strong>Update data</strong> after moving blocks or changing thickness — weights and LOT depend on updated areas.</li>
+        <li>If the plot looks empty, check <em>Graphics</em> switches (blocks, sketch, background) and click <strong>Plot blocks</strong>.</li>
+        <li>If force arrows are too large or small, adjust <strong>forces factor</strong> or <strong>Force shrink factor</strong>.</li>
+        <li>Use <strong>Clear All Variables</strong> for a full reset; use <strong>Clear Interactive Area</strong> only to remove overlays.</li>
+        <li>For teaching demos, start from a prepared <code>.mat</code> example, then change thrust with the slider live.</li>
+      </ul>
+
+      <h3>Python port</h3>
+      <p>
+        A cross-platform desktop port (<strong>pyLOT</strong>) is maintained separately and reads the same
+        <code>Examples/*.mat</code> files. See the
+        <a href="https://github.com/gcastellazzi/pyLOT">pyLOT repository</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      aLOTofImaginArches — open-source educational software.
+      Repository:
+      <a href="https://github.com/gcastellazzi/aLOTofImaginArches">github.com/gcastellazzi/aLOTofImaginArches</a>.
+      Motto: <em>Ut pendet continuum flexile, sic stabit contiguum rigidum inversum.</em>
+    </p>
+  </footer>
+</body>
+</html>

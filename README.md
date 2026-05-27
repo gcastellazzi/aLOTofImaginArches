@@ -24,9 +24,17 @@ By sharing these resources, I hope to gather feedback and suggestions that will 
 
 ## Documentation
 
-Several examples are already available in the Example folder.
+Several examples are already available in the `Examples/` folder.
 
-A simple user guide for the software can be found [here for the use of Loads and Units](https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Docs/Load_Graphics_Units.pdf), [here for the development of a circular arch](https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Docs/Example_Circular_arch_construction.pdf), [here for the development of a sketched arch](https://github.com/gcastellazzi/aLOTofImaginArches/blob/main/Docs/Example_Sketched_arch_construction.pdf). All these documents are a "click by click" guide to the use of the software.
+**Web user guide (English):** after enabling GitHub Pages on the `main` branch / `/docs` folder, the guide is published at  
+[https://gcastellazzi.github.io/aLOTofImaginArches/](https://gcastellazzi.github.io/aLOTofImaginArches/)  
+(source: [`docs/index.html`](docs/index.html)).
+
+Step-by-step PDF tutorials:
+
+- [Loads, graphics & units](Docs/Load_Graphics_Units.pdf)
+- [Circular arch construction](Docs/Example_Circular_arch_construction.pdf)
+- [Sketched arch construction](Docs/Example_Sketched_arch_construction.pdf)
 
 ## Latest Developments
 
@@ -47,6 +55,10 @@ The latest updates to the aLOTofImaginArches software include:
     - Enhanced labeling with LaTeX-style text for clarity and formatted numeric values with two decimal precision.
 
 These updates improve the visualization of forces, weights, and block interactions, enhancing the tool's educational value and usability.
+
+## Python port
+
+The Python desktop application **pyLOT** is developed separately in the sibling folder [`../pyLOT`](../pyLOT) (same parent directory as this repository). It reuses the `.mat` examples from [`Examples/`](Examples/).
 
 ## Future developments
 
