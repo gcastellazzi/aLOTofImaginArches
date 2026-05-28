@@ -226,6 +226,7 @@
   <nav class="toc" aria-label="Table of contents">
     <div class="wrap">
       <a href="#requirements">Requirements</a>
+      <a href="#download">Download</a>
       <a href="#interface">Interface</a>
       <a href="#workflow">Workflow</a>
       <a href="#arch-definition">Arch Definition</a>
@@ -256,6 +257,47 @@
         (same directory as the <code>.mlapp</code> file). The app uses helpers for intersections, arrows,
         freehand selection, and the admissible domain.
       </div>
+    </section>
+
+    <section id="download">
+      <h2>Download &amp; repository layout</h2>
+      <p>
+        The app is distributed as a MATLAB App Designer file plus helper functions and teaching examples.
+        Keep the repository structure unchanged when moving the app to another machine.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Contents</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>aLOTofImaginArches.mlapp</code></td>
+            <td>Main MATLAB App Designer application.</td>
+          </tr>
+          <tr>
+            <td><code>external_functions/</code></td>
+            <td>Helper routines for arrows, intersections, freehand drawing, point selection, and admissibility checks.</td>
+          </tr>
+          <tr>
+            <td><code>Examples/</code></td>
+            <td>Ready-to-open <code>.mat</code> models for lectures and tutorials.</td>
+          </tr>
+          <tr>
+            <td><code>docs/</code></td>
+            <td>This web guide, images, and PDF tutorials.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ol class="steps">
+        <li>Download the repository from <a href="https://github.com/gcastellazzi/aLOTofImaginArches">GitHub</a> using <strong>Code → Download ZIP</strong>, or clone it with Git.</li>
+        <li>Extract the ZIP if needed, then open the folder in MATLAB.</li>
+        <li>Double-click <code>aLOTofImaginArches.mlapp</code>, or run <code>app = aLOTofImaginArches;</code>.</li>
+      </ol>
     </section>
 
     <section id="interface">
@@ -474,13 +516,13 @@
         These click-by-click PDFs complement this page (same content as linked from the repository README):
       </p>
       <ul>
-        <li><a href="../Docs/Load_Graphics_Units.pdf">Loads, graphics &amp; units</a></li>
-        <li><a href="../Docs/Example_Circular_arch_construction.pdf">Building a circular arch</a></li>
-        <li><a href="../Docs/Example_Sketched_arch_construction.pdf">Building a sketched arch</a></li>
+        <li><a href="Load_Graphics_Units.pdf">Loads, graphics &amp; units</a></li>
+        <li><a href="Example_Circular_arch_construction.pdf">Building a circular arch</a></li>
+        <li><a href="Example_Sketched_arch_construction.pdf">Building a sketched arch</a></li>
       </ul>
       <div class="callout">
-        On GitHub Pages, PDF links open from the repository browser:
-        use the <code>Docs/</code> folder in the
+        If a browser downloads a PDF instead of opening it inline, save it locally and open it with a PDF reader.
+        The same files are also available in the <code>docs/</code> folder of the
         <a href="https://github.com/gcastellazzi/aLOTofImaginArches">GitHub repository</a>.
       </div>
     </section>

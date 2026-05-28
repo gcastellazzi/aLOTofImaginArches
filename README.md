@@ -26,15 +26,15 @@ By sharing these resources, I hope to gather feedback and suggestions that will 
 
 Several examples are already available in the `Examples/` folder.
 
-**Web user guide (English):** after enabling GitHub Pages on the `main` branch / `/docs` folder, the guide is published at  
+**Web user guide (English):** publish with GitHub Pages from the `main` branch / `/docs` folder. The guide is then available at  
 [https://gcastellazzi.github.io/aLOTofImaginArches/](https://gcastellazzi.github.io/aLOTofImaginArches/)  
 (source: [`docs/index.html`](docs/index.html)).
 
 Step-by-step PDF tutorials:
 
-- [Loads, graphics & units](Docs/Load_Graphics_Units.pdf)
-- [Circular arch construction](Docs/Example_Circular_arch_construction.pdf)
-- [Sketched arch construction](Docs/Example_Sketched_arch_construction.pdf)
+- [Loads, graphics & units](docs/Load_Graphics_Units.pdf)
+- [Circular arch construction](docs/Example_Circular_arch_construction.pdf)
+- [Sketched arch construction](docs/Example_Sketched_arch_construction.pdf)
 
 ## Latest Developments
 
