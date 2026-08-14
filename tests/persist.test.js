@@ -162,3 +162,31 @@ test('the suggested file name is safe to write to disk', () => {
   assert.ok(!/[/\\:]/.test(name.slice(0, -5)), name);
   assert.match(suggestedName({}), /^arch-/);
 });
+
+// ------------------------------------------------------ the dome settings --
+
+import { luneWeights, defaultAxis } from '../docs/app/js/core/dome.js';
+
+test('the dome settings travel with the weights they produced', () => {
+  // Saving a lune and reopening it must not show a panel switched off beside
+  // weights that are still those of a lune.
+  const { state } = session(12);
+  const { weights } = luneWeights(state.model.blocks,
+    { axisX: 0, angleDeg: 22, specificWeight: 20 });
+  state.model.weights = weights;
+  state.dome = { poleni: true, angleDeg: 22, axisX: 0.5 };
+
+  const back = deserialise(JSON.stringify(serialise(state)));
+  assert.deepEqual(back.dome, { poleni: true, angleDeg: 22, axisX: 0.5 });
+  back.model.weights.forEach((w, i) => {
+    assert.ok(Math.abs(w - weights[i]) < 1e-12, `weight ${i}`);
+  });
+});
+
+test('a file saved before the dome existed opens as a barrel', () => {
+  const { state } = session(8);
+  const data = serialise(state);
+  delete data.dome;
+  const back = deserialise(JSON.stringify(data));
+  assert.deepEqual(back.dome, { poleni: false, angleDeg: 15, axisX: 0 });
+});

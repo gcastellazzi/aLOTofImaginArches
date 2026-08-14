@@ -29,6 +29,12 @@ import { serialise, deserialise, suggestedName } from './core/persist.js';
 import {
   bestLineForThrust, collapseRange, analyse, displacedConfiguration, displaced,
 } from './core/mechanism.js';
+import {
+  defaultAxis, luneWeights, solids, widthRange,
+} from './core/dome.js';
+import {
+  frame, projectedBounds, drawSolids, drawAxis,
+} from './render/solid.js';
 
 const DATA = 'data/examples/';
 
@@ -47,6 +53,10 @@ const ui = {
   mechOn: el('mechOn'), mechVerdict: el('mechVerdict'),
   mechCount: el('mechCount'), mechBand: el('mechBand'),
   mechAmp: el('mechAmp'), goHmin: el('goHmin'), goHmax: el('goHmax'),
+  poleni: el('poleni'), domeAngle: el('domeAngle'), domeAxis: el('domeAxis'),
+  pickAxis: el('pickAxis'), domeStatus: el('domeStatus'),
+  tabForce: el('tabForce'), tabSolid: el('tabSolid'),
+  sideCaption: el('sideCaption'),
   showJoints: el('showJoints'), admissible: el('admissible'),
   flipY: el('flipY'),
   imageFile: el('imageFile'), traceInner: el('traceInner'),
@@ -64,6 +74,10 @@ const ui = {
 
 const mainAx = new Axes(el('main'), { equal: true, yUp: true });
 const forceAx = new Axes(el('force'), { equal: true, yUp: true });
+// The block view lives on its own canvas, sharing the pane with the force
+// polygon. Its "data" coordinates are the screen plane of the projection, so
+// equal scales there mean the solid is drawn without distortion.
+const solidAx = new Axes(el('solid'), { equal: true, yUp: true });
 mainAx.xlabel = 'x';
 mainAx.ylabel = 'y';
 forceAx.title = 'Force polygon';
@@ -135,6 +149,8 @@ async function loadExample(file) {
   }
 
   describe();
+  resetAxis();
+  reportDome();
   recompute();
   fitViews();
   draw();
@@ -249,8 +265,17 @@ function reportMechanism(thrustFraction) {
     + `${a.bodyCount === 1 ? 'body' : 'bodies'} · constraint multiplicity `
     + `${a.constraints} · 3×${a.bodyCount} − ${a.constraints} = ${a.dof}`;
 
-  ui.mechAmp.disabled = a.dof <= 0;
-  if (a.dof <= 0) ui.mechAmp.value = 0;
+  // A positive degree of freedom is not by itself a collapse. If no sense of
+  // the motion opens every joint, the pattern would need the masonry to pass
+  // through itself, and there is nothing to animate.
+  const runnable = a.dof > 0 && a.kinematic;
+  ui.mechAmp.disabled = !runnable;
+  if (!runnable) ui.mechAmp.value = 0;
+  if (a.dof > 0 && !a.kinematic) {
+    ui.mechVerdict.className = 'verdict';
+    ui.mechCount.textContent += `  ·  joint openings `
+      + `${a.openings.map((v) => v.toPrecision(2)).join(', ')}`;
+  }
 
   if (state.band && thrustFraction !== undefined) {
     const scaled = m.frame && m.frame.coordinates === 'physical';
@@ -558,6 +583,10 @@ function draw() {
   drawReference();
   mainAx.decorate();
 
+  if (sideView() === 'solid') {
+    drawSolidView();
+    return;
+  }
   forceAx.begin();
   forceAx.reequalize();
   if (state.fp) {
@@ -790,6 +819,15 @@ function applyScale() {
   state.forces.points = state.forces.points.map(([x, y]) => [x * k, y * k]);
   ui.refLength.value = String(real);
 
+  // The axis of revolution is a coordinate on the drawing, so it scales with
+  // it; and a lune's width is a LENGTH, so its weights go as k^3 where a
+  // constant-thickness arch goes as k^2. Re-weighing from the scaled geometry
+  // gets both right without a second rule to keep in step.
+  ui.domeAxis.value = (Number(ui.domeAxis.value) * k).toPrecision(6);
+  reweigh();
+  state.band = null; state.bandKey = null;
+  state.solidFit = null;
+
   const total = (state.model.weights ?? []).reduce((s, v) => s + v, 0);
   state.basePole = [total / 4, -total / 2];
   ui.thrust.value = 50;
@@ -853,6 +891,159 @@ function reportTrace() {
   }
 }
 
+/** Which of the two views the right-hand pane is showing. */
+function sideView() {
+  return ui.tabSolid.classList.contains('active') ? 'solid' : 'force';
+}
+
+/**
+ * The block arch in three dimensions.
+ *
+ * The projection is orthonormal, so the picture is undistorted; the axes are
+ * fitted to the PROJECTED bounds, which keeps the drawing inside the box
+ * whatever the viewpoint. The viewpoint follows the MATLAB app: turned a
+ * little further round as the slice angle opens, so a wide lune does not hide
+ * behind itself.
+ */
+function drawSolidView() {
+  const m = state.model;
+  solidAx.begin();
+  if (!m || !m.blocks || !m.blocks.length) {
+    solidAx.decorate();
+    return;
+  }
+  const dome = domeOptions();
+  const f = frame(-45 - (dome.poleni ? dome.angleDeg / 2 : 0), 30);
+  const list = solids(m.blocks, {
+    poleni: dome.poleni,
+    axisX: dome.axisX,
+    angleDeg: dome.angleDeg,
+    thickness: m.thickness ?? m.blocks.map(() => 1),
+    steps: dome.poleni ? Math.max(2, Math.round(dome.angleDeg / 4)) : 1,
+  });
+
+  if (state.solidFit !== sideKey()) {
+    const b = projectedBounds(list, f);
+    if (b) solidAx.fit(b);
+    state.solidFit = sideKey();
+  }
+  solidAx.reequalize();
+
+  // While the mechanism is on show, colour the solids by macro-block too, so
+  // the two views agree about which pieces move together.
+  const highlight = ui.showMech.checked && state.mech
+    ? m.blocks.map((_, k) => {
+      const b = state.mech.bodyOf[k];
+      const c = BODY_RGB[b % BODY_RGB.length];
+      return b < 0 ? [200, 200, 200] : c;
+    })
+    : null;
+
+  drawSolids(solidAx, list, { f, highlight });
+  if (dome.poleni) {
+    const ys = m.blocks.flatMap((p) => p.y);
+    drawAxis(solidAx, dome.axisX, [Math.min(...ys), Math.max(...ys)], f);
+  }
+  solidAx.decorate();
+}
+
+/** What the solid view is a picture of; a change means refit. */
+function sideKey() {
+  const m = state.model;
+  const d = domeOptions();
+  return `${m && m.blocks ? m.blocks.length : 0}:${d.poleni}:`
+    + `${d.angleDeg}:${d.axisX}:${m && m.frame ? m.frame.units_per_pixel : 1}`;
+}
+
+/** The macro-block colours, as triples, to tint the solids with. */
+const BODY_RGB = [
+  [127, 179, 213], [240, 178, 122], [169, 223, 191],
+  [215, 189, 226], [249, 231, 159], [174, 182, 191],
+];
+
+/**
+ * Put the axis of revolution where the arch is, unless the user has moved it.
+ *
+ * Called whenever a model arrives from somewhere other than the tracer -- a
+ * stored example, a reopened file -- because leaving it at zero would put the
+ * axis off the edge of a plate traced in pixel coordinates and make every lune
+ * absurdly wide.
+ */
+function resetAxis() {
+  if (state.axisPicked) return;
+  const m = state.model;
+  if (!m) return;
+  ui.domeAxis.value = defaultAxis(m.pointA, m.pointB, m.blocks).toPrecision(6);
+}
+
+/** What the Dome panel is asking for. */
+function domeOptions() {
+  return {
+    poleni: ui.poleni.checked,
+    angleDeg: Math.max(0.1, Number(ui.domeAngle.value) || 15),
+    axisX: Number(ui.domeAxis.value) || 0,
+  };
+}
+
+/**
+ * Re-weigh the blocks under whichever idealisation is in force.
+ *
+ * Called wherever the geometry or the dome parameters move -- tracing,
+ * scaling, changing the angle or the axis -- because the weights are the
+ * ONLY thing the Poleni switch changes, and everything downstream reads them.
+ */
+function reweigh() {
+  const m = state.model;
+  if (!m || !m.blocks || !m.blocks.length) return;
+  const gamma = Number(ui.gamma.value) || 20;
+  const dome = domeOptions();
+
+  if (dome.poleni) {
+    // W = gamma * A * theta * rbar, by Pappus: exact for a plane region turned
+    // about an axis in its plane, and it needs only the area and the centroid.
+    const { weights, widths } = luneWeights(m.blocks, {
+      axisX: dome.axisX, angleDeg: dome.angleDeg, specificWeight: gamma,
+    });
+    m.weights = weights;
+    // The out-of-plane dimension is no longer a constant the user typed: it is
+    // the width of the lune, and it varies block by block.
+    m.thickness = widths;
+  } else {
+    const thickness = Math.max(0, Number(ui.thick.value) || 1);
+    m.weights = weighBlocks(m.blocks, { specificWeight: gamma, thickness });
+    m.thickness = m.blocks.map(() => thickness);
+  }
+
+  const total = m.weights.reduce((a, b) => a + b, 0);
+  state.basePole = [total / 4, -total / 2];
+  reportDome();
+}
+
+/** Say how far the lune tapers, which is the number that explains the result. */
+function reportDome() {
+  const m = state.model;
+  const dome = domeOptions();
+  ui.domeAngle.disabled = !dome.poleni;
+  ui.domeAxis.disabled = !dome.poleni;
+  ui.pickAxis.disabled = !dome.poleni;
+
+  if (!dome.poleni) {
+    ui.domeStatus.textContent = 'off — constant thickness';
+    return;
+  }
+  if (!m || !m.blocks || !m.blocks.length) {
+    ui.domeStatus.textContent = 'needs a traced arch';
+    return;
+  }
+  const r = widthRange(m.blocks, dome.axisX, dome.angleDeg);
+  const scaled = m.frame && m.frame.coordinates === 'physical';
+  const show = (v) => (scaled ? format(v, 'length', state.system)
+    : `${v.toPrecision(3)} px`);
+  ui.domeStatus.textContent =
+    `lune ${show(r.max)} wide at the major parallel, `
+    + `${show(r.min)} at the crown`;
+}
+
 /** Turn the two traced curves into an arch and hand it to the statics. */
 function generateBlocks() {
   const t = state.trace;
@@ -881,6 +1072,13 @@ function generateBlocks() {
   };
   // A traced arch has no stored solution to be inconsistent with.
   state.consistent = { ok: true, reason: null, extraRows: 0 };
+  // The axis of revolution defaults to the mid-point of the springings, which
+  // is right for any symmetric arch; the field and the picker override it.
+  if (!state.axisPicked) {
+    ui.domeAxis.value = defaultAxis(pointA, pointB, blocks).toPrecision(6);
+  }
+  reweigh();
+  state.band = null; state.bandKey = null;
   // Start from a pole giving a thrust of about a quarter of the total weight,
   // which for a normal arch puts the line roughly inside the ring.
   state.basePole = [total / 4, -total / 2];
@@ -915,6 +1113,21 @@ function attachNavigation(ax) {
         fitForceView();
       }
       armForce();
+      return;
+    }
+    if (ax === mainAx && state.pickingAxis) {
+      // Only the abscissa matters: the axis of a dome is vertical.
+      ui.domeAxis.value = mainAx.toData([e.offsetX, e.offsetY])[0].toPrecision(6);
+      state.axisPicked = true;
+      state.pickingAxis = false;
+      ui.pickAxis.classList.remove('armed');
+      ui.pickAxis.textContent = 'Pick the axis on the drawing';
+      reweigh();
+      state.band = null; state.bandKey = null;
+      state.solidFit = null;
+      recompute();
+      fitForceView();
+      draw();
       return;
     }
     if (ax === mainAx && state.ref.picking) {
@@ -960,6 +1173,7 @@ function attachNavigation(ax) {
 
 attachNavigation(mainAx);
 attachNavigation(forceAx);
+attachNavigation(solidAx);
 
 el('main').addEventListener('dblclick', (e) => { e.preventDefault(); finishTrace(); });
 window.addEventListener('keydown', (e) => {
@@ -995,6 +1209,16 @@ ui.traceInner.addEventListener('click', () => arm('inner'));
 ui.traceOuter.addEventListener('click', () => arm('outer'));
 ui.makeBlocks.addEventListener('click', generateBlocks);
 ui.nBlocks.addEventListener('change', reportTrace);
+for (const f of [ui.gamma, ui.thick]) {
+  f.addEventListener('input', () => {
+    if (!state.model || !state.model.blocks || !state.model.blocks.length) return;
+    reweigh();
+    state.band = null; state.bandKey = null;
+    recompute();
+    fitForceView();
+    draw();
+  });
+}
 ui.clearTrace.addEventListener('click', () => {
   state.trace = { inner: [], outer: [], armed: null, cursor: null };
   finishTrace();
@@ -1049,6 +1273,62 @@ for (const k of ['startPos', 'split']) {
     draw();
   });
 }
+// ------------------------------------------------- the two side views --
+
+function showSide(which) {
+  const solid = which === 'solid';
+  ui.tabSolid.classList.toggle('active', solid);
+  ui.tabForce.classList.toggle('active', !solid);
+  el('solid').hidden = !solid;
+  el('force').hidden = solid;
+  ui.sideCaption.textContent = solid
+    ? (ui.poleni.checked ? 'Blocks — dome lune' : 'Blocks — constant thickness')
+    : 'Force polygon';
+  // The canvas that was hidden has no size to speak of, so it must be
+  // re-measured the moment it is shown or the first draw lands on a stale box.
+  solidAx.syncSize();
+  forceAx.syncSize();
+  if (solid) state.solidFit = null;
+  draw();
+}
+ui.tabForce.addEventListener('click', () => showSide('force'));
+ui.tabSolid.addEventListener('click', () => showSide('solid'));
+
+ui.poleni.addEventListener('change', () => {
+  reweigh();
+  state.band = null; state.bandKey = null;
+  state.solidFit = null;
+  ui.sideCaption.textContent = sideView() === 'solid'
+    ? (ui.poleni.checked ? 'Blocks — dome lune' : 'Blocks — constant thickness')
+    : 'Force polygon';
+  recompute();
+  fitForceView();
+  draw();
+});
+for (const f of [ui.domeAngle, ui.domeAxis]) {
+  f.addEventListener('input', () => {
+    if (!ui.poleni.checked) return;
+    if (f === ui.domeAxis) state.axisPicked = true;
+    reweigh();
+    state.band = null; state.bandKey = null;
+    state.solidFit = null;
+    recompute();
+    fitForceView();
+    draw();
+  });
+}
+ui.pickAxis.addEventListener('click', () => {
+  state.pickingAxis = !state.pickingAxis;
+  if (state.pickingAxis) {
+    if (state.trace.armed) finishTrace();
+    if (state.ref.picking) armReference();
+  }
+  ui.pickAxis.classList.toggle('armed', state.pickingAxis);
+  ui.pickAxis.textContent = state.pickingAxis
+    ? 'Click on the axis…' : 'Pick the axis on the drawing';
+  draw();
+});
+
 ui.mechOn.addEventListener('change', () => {
   if (!ui.mechOn.checked) {
     state.mech = null;
@@ -1091,6 +1371,7 @@ ui.reset.addEventListener('click', () => { fitViews(); draw(); });
  */
 function saveWork() {
   try {
+    state.dome = domeOptions();
     const data = serialise(state, {
       thrust: ui.thrust.value,
       startPos: ui.startPos.value,
@@ -1136,10 +1417,17 @@ function openWork(text) {
   state.consistent = { ok: true, problems: [] };
 
   ui.system.value = data.system;
+  ui.poleni.checked = !!data.dome.poleni;
+  ui.domeAngle.value = data.dome.angleDeg;
+  ui.domeAxis.value = data.dome.axisX;
+  state.axisPicked = true;          // the file's axis, not a fresh default
+  state.dome = data.dome;
   ui.thrust.value = data.controls.thrust;
   ui.startPos.value = data.controls.startPos;
   ui.split.value = data.controls.split;
 
+  resetAxis();
+  reportDome();
   recompute();
   fitViews();
   draw();
@@ -1179,8 +1467,10 @@ window.addEventListener('resize', () => {
   // aspect and quietly falsifies every length read off the drawing.
   mainAx.syncSize();
   forceAx.syncSize();
+  solidAx.syncSize();
   mainAx.reequalize();
   forceAx.reequalize();
+  solidAx.reequalize();
   draw();
 });
 

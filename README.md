@@ -43,10 +43,27 @@ reads is exactly the source that runs.
   hooked at the intrados or the extrados and that point becomes a hinge. The
   arch divides into rigid macro-blocks, the degree of freedom is counted, and
   the collapse mechanism is drawn.
+- **Poleni's dome**: treat the arch as a lune of a dome rather than a slice of
+  a barrel, and the weights follow the width of the lune &mdash; broad at the
+  major parallel, closing to nothing at the crown. The line of thrust moves
+  with them.
+- **Two views** of the right-hand pane: the force polygon, or the voussoirs as
+  solids in three dimensions, prismatic or revolved.
 - **Bow's notation**: dashed rays lettered on the force polygon, with the same
   letter on the parallel segment of the thrust line.
 - **Hooke's cable**, hung from the two springings themselves.
 - **Save and reopen** a whole session as one JSON file.
+
+### A dome is not an arch
+
+The weight of a lune voussoir is exact, by Pappus: *V* = *A*·θ·*r̄*, with *r̄*
+the distance of the block's centroid from the axis. On a semicircular ring of
+16 equal blocks at a 15° slice:
+
+| share of the total weight | barrel | dome |
+|---|---|---|
+| a springing block | 6.25 % | 9.75 % |
+| the crown block | 6.25 % | 0.96 % |
 
 ### The mechanism, in one table
 
@@ -69,7 +86,7 @@ extrados at the crown — and four at maximum thrust.
 |---|---|
 | `docs/app/` | the application: `js/core/` is the mechanics, `js/render/` the drawing |
 | `docs/index.html` | the user guide |
-| `tests/` | 99 tests, run by the Node test runner |
+| `tests/` | 121 tests, run by the Node test runner |
 | `tools/mat2json.py` | converts the MATLAB `.mat` examples to JSON, with a `--check` mode that re-verifies every field |
 | `paper/` | the SoftwareX manuscript, with its figures generated from the software itself |
 | `Examples/` | the original MATLAB examples |
@@ -100,6 +117,8 @@ usable audit of them:
 
 ## Latest developments
 
+- **Poleni's dome and a 3-D block view**, with the second pane tabbed between
+  the force polygon and the solids, as the MATLAB version had it.
 - **Mechanism analysis**: hinge formation from the thrust line, macro-blocks,
   the degree-of-freedom count, and the collapse kinematics drawn by integrating
   the velocity field so that the blocks stay rigid and the hinges stay shut.

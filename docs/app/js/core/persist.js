@@ -80,6 +80,14 @@ export function serialise(state, controls = {}, imageName = null) {
       }
       : null,
     basePole: state.basePole ? [...state.basePole] : null,
+    // The dome settings belong with the weights they produced. Without them a
+    // reopened lune would show its panel switched off while its weights were
+    // still those of a lune -- consistent numbers, a lying interface.
+    dome: {
+      poleni: !!(state.dome && state.dome.poleni),
+      angleDeg: Number(state.dome?.angleDeg ?? 15),
+      axisX: Number(state.dome?.axisX ?? 0),
+    },
     controls: {
       thrust: Number(controls.thrust ?? 50),
       startPos: Number(controls.startPos ?? 50),
@@ -157,6 +165,7 @@ export function deserialise(text) {
     controls: {
       thrust: 50, startPos: 50, split: 50, ...(data.controls ?? {}),
     },
+    dome: { poleni: false, angleDeg: 15, axisX: 0, ...(data.dome ?? {}) },
   };
 }
 

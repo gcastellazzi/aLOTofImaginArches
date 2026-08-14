@@ -347,3 +347,94 @@ At the amplitudes the interface allows, that is well under a pixel. The
 supports do not drift at all (1e-15). Tests pin down both properties, and one
 of them asserts that a single rotation *does* open the hinges — so that anyone
 tempted to simplify the integration away sees what it costs.
+
+### Masonry cannot pass through itself
+
+The sign of a null-space vector falls out of the elimination, not out of the
+mechanics, so half the time the mechanism came back running **backwards** —
+blocks driving into one another instead of coming apart. A hinge sits at one
+face of its joint and the joint has to open at the *other*: `separationSense`
+measures the opening rate at that far end for every interior hinge and takes
+the sign from it. Each hinge therefore carries two extra things, set when it is
+found: `opposite`, the far end of its joint, and `along`, the direction from
+the body before the hinge to the body after.
+
+The integration needs the same care a second time. The null space is recomputed
+at every step and its sign can flip between steps; left alone the arch judders
+back and forth instead of opening. Each step is aligned with the one before it.
+
+**Some hinge patterns have no good sense at all**, and that is not a defect in
+the solver. On a symmetric ring at maximum thrust the two haunch hinges both
+fall on the intrados, and Kennedy puts the crown body's centre on the axis — so
+it *turns* instead of dropping, and one haunch opens exactly as the other
+shuts:
+
+```
+H min   5 hinges  dof 2   openings   0.14   0.08   0.03      a real mechanism
+H max   4 hinges  dof 1   openings   0.16  -0.17             cannot run
+```
+
+`separationSense` returns 0 there, `analyse` reports `kinematic: false`, and the
+panel says the pattern would need the masonry to interpenetrate rather than
+animating something impossible. **A positive degree of freedom is not by itself
+a collapse mode**; the joints have to be able to open.
+
+## Poleni's dome: `dome.js`
+
+A barrel vault cut into voussoirs gives blocks of constant width, and a block
+weighs its area times that width. A **dome** cut into lunes gives nothing of
+the sort: each lune is bounded by two meridian planes, so its width is
+proportional to the distance from the axis — broad at the major parallel,
+closing to nothing at the crown. That is what Poleni saw in 1748, and it is why
+a dome is not an arch.
+
+**The weight of a lune block is exact, by Pappus:**
+
+```
+V = A · θ · r̄
+```
+
+with `A` the area and `r̄` the distance of the *centroid* from the axis. It
+needs nothing the model does not already carry. The MATLAB app instead summed
+`bounding-box area × the radius of one vertex × dθ` over the revolution, which
+is neither exact nor the same quantity; the tests here check `luneVolume`
+against the closed-form annular wedge, `θ/2 · (r₂² − r₁²) · h`, to 1e-12.
+
+The mechanical consequence, measured on a semicircular ring of 16 equal blocks
+at a 15° slice: the springing block's share of the total weight rises from
+**6.25 % to 9.75 %**, and the crown block's falls from **6.25 % to 0.96 %**. The
+line of thrust moves accordingly — which is the entire point.
+
+### The axis, and a trap in defaulting it
+
+The axis defaults to the vertical through the mid-point of the two springings,
+right for any symmetric arch. A **stored example may carry no springings**, and
+defaulting to `x = 0` there put the axis off the edge of a plate traced in pixel
+coordinates: `Poleni_Example_01` spans x from 35 to 1744, so every lune came out
+far too wide. `defaultAxis` therefore falls back to the middle of the blocks,
+and the app re-applies it whenever a model arrives from anywhere but the tracer.
+
+### Scaling
+
+A lune's width is a **length**, so its weights go as `k³` where a
+constant-thickness arch goes as `k²`. Rather than carry a second scaling rule,
+the app re-weighs from the scaled geometry after every change of scale — and
+scales the axis coordinate with it.
+
+## The block view: `render/solid.js`
+
+The second pane carries two tabs, the force polygon and the block arch in three
+dimensions, as the MATLAB app's `ForcePolygonFPTab` and `DViewTab` did. No
+WebGL and no library: an orthographic axonometric projection and the painter's
+algorithm, which is all a few hundred convex quadrilaterals need. The viewpoint
+follows MATLAB's `view([-45 - angle/2, 30])`, so the two versions show the same
+picture from the same corner.
+
+The projection frame is orthonormal — `u`, `v` and `d` are unit and mutually
+perpendicular — so lengths lying in the plane of the screen come out at their
+true size. That is the three-dimensional counterpart of `axis equal`, and a
+test asserts it rather than trusting the algebra.
+
+Faces are sorted on the depth of their centroid. The painter's algorithm can be
+fooled by long interpenetrating faces; voussoirs are small convex pieces that
+do not overlap, so it is exact here and costs one sort.

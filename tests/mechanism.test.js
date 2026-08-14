@@ -16,7 +16,7 @@ import { blocksBetween, weighBlocks } from '../docs/app/js/core/trace.js';
 import {
   TOUCH, bestLineForThrust, collapseRange, findHinges, bodies, bodyOfBlock,
   degreesOfFreedom, nullSpace, mechanismMotion, displaced, analyse,
-  displacedConfiguration, transformPoint,
+  displacedConfiguration, transformPoint, separationSense, jointOpenings,
 } from '../docs/app/js/core/mechanism.js';
 
 function arc(r, n = 300) {
@@ -192,10 +192,15 @@ test('the null space is found, and is empty when the system determines all', () 
 
 /** Four hinges in an arch-like chain, with centres known by hand. */
 function fourHingeChain() {
+  // The interior hinges sit on OPPOSITE faces -- one intrados, one extrados --
+  // which is what makes this a mechanism that can actually run: `opposite` is
+  // the far end of each joint and `along` runs from the body before to the one
+  // after. Two hinges on the same face either side of a rotating middle body
+  // would open one joint while closing the other; that case is tested below.
   const hinges = [
     { joint: 0, point: [0, 0], support: true },
-    { joint: 4, point: [2, 3], support: false },
-    { joint: 8, point: [6, 3], support: false },
+    { joint: 4, point: [2, 3], support: false, opposite: [2, 4], along: [1, 0] },
+    { joint: 8, point: [6, 3], support: false, opposite: [6, 2], along: [1, 0] },
     { joint: 12, point: [8, 0], support: true },
   ];
   return { hinges, bodyList: bodies(hinges, 12) };
@@ -302,6 +307,109 @@ test('a body with no macro-block of its own is left where it is', () => {
   const poly = { x: [1, 2], y: [0, 1] };
   const [same] = displaced([poly], [-1], T);
   assert.deepEqual(same, { x: [1, 2], y: [0, 1] });
+});
+
+// ------------------------------------------------ no interpenetration --
+
+test('the mechanism is run in the sense that opens the joints', () => {
+  // The sign of a null-space vector falls out of the elimination, not out of
+  // the mechanics, so half the time it describes the blocks driving into one
+  // another. separationSense takes the sign from the joints instead.
+  const { hinges, bodyList } = fourHingeChain();
+  const motion = mechanismMotion(hinges, bodyList);
+  const forward = separationSense(hinges, bodyList, motion);
+
+  const reversed = {
+    ...motion,
+    motions: motion.motions.map((m) => ({
+      ...m, vx: -m.vx, vy: -m.vy, omega: -m.omega,
+    })),
+  };
+  const back = separationSense(hinges, bodyList, reversed);
+  assert.equal(back.sense, -forward.sense,
+    'negating the motion must reverse the sense that is chosen');
+  back.openings.forEach((v, i) => {
+    assert.ok(Math.abs(v + forward.openings[i]) < 1e-12, `opening ${i}`);
+  });
+});
+
+test('a pattern that could only interpenetrate is refused, not drawn as sound', () => {
+  // Both interior hinges on the same face, either side of a middle body that
+  // turns rather than drops: one joint opens exactly as the other shuts. No
+  // sense of the motion opens them both, so it is not a collapse mode -- and
+  // this is not hypothetical, it is what a symmetric ring produces at maximum
+  // thrust.
+  const hinges = [
+    { joint: 0, point: [0, 0], support: true },
+    { joint: 4, point: [2, 3], opposite: [2, 4], along: [1, 0] },
+    { joint: 8, point: [6, 3], opposite: [6, 4], along: [1, 0] },
+    { joint: 12, point: [8, 0], support: true },
+  ];
+  const bodyList = bodies(hinges, 12);
+  const motion = mechanismMotion(hinges, bodyList);
+  const { sense, openings } = separationSense(hinges, bodyList, motion);
+  assert.equal(openings.length, 2);
+  assert.ok(openings[0] * openings[1] < 0,
+    `expected opposite openings, got ${openings}`);
+  assert.equal(sense, 0, 'mixed openings must be refused');
+});
+
+test('at minimum thrust every joint of the real mechanism opens', () => {
+  // The classical five-hinge collapse: a genuine mode, and every joint must
+  // come apart at the face opposite its hinge.
+  const r = ring(4, 4.72, 16);
+  const band = collapseRange(r.seq, r.joints);
+  const best = bestLineForThrust(r.seq, r.joints, band.min);
+  const a = analyse(best.crossings, r.joints, r.blocks.length);
+
+  assert.ok(a.dof > 0, 'minimum thrust must be a mechanism');
+  assert.equal(a.kinematic, true, 'and a kinematically possible one');
+
+  const T = displacedConfiguration(a.hinges, a.bodies, 0.12);
+  for (let k = 1; k + 1 < a.hinges.length; k++) {
+    const h = a.hinges[k];
+    const L = transformPoint(T[k - 1], h.opposite);
+    const R = transformPoint(T[k], h.opposite);
+    const gap = (R[0] - L[0]) * h.along[0] + (R[1] - L[1]) * h.along[1];
+    assert.ok(gap > 0,
+      `joint ${h.joint} closed by ${-gap} instead of opening`);
+  }
+});
+
+test('the sense does not depend on how the amplitude is reached', () => {
+  // Whatever the elimination returns at each step, the integration must not
+  // reverse partway: the joints open monotonically.
+  const r = ring(4, 4.72, 16);
+  const band = collapseRange(r.seq, r.joints);
+  const best = bestLineForThrust(r.seq, r.joints, band.min);
+  const a = analyse(best.crossings, r.joints, r.blocks.length);
+  const h = a.hinges[1];
+
+  let last = 0;
+  for (const amp of [0.02, 0.05, 0.1, 0.2]) {
+    const T = displacedConfiguration(a.hinges, a.bodies, amp);
+    const L = transformPoint(T[0], h.opposite);
+    const R = transformPoint(T[1], h.opposite);
+    const gap = (R[0] - L[0]) * h.along[0] + (R[1] - L[1]) * h.along[1];
+    assert.ok(gap > last, `at amplitude ${amp} the gap went from ${last} to ${gap}`);
+    last = gap;
+  }
+});
+
+test('a hinge carries the far end of its joint and the way along the arch', () => {
+  const joints = Array.from({ length: 9 }, (_, i) => ({ a: [i, 0], b: [i, 1] }));
+  const crossings = joints.map((j, i) => {
+    const v = i === 4 ? 0.0 : i === 6 ? 1.0 : 0.5;
+    return { s: v, point: [i, v], inside: true };
+  });
+  const h = findHinges(crossings, joints);
+  const intrados = h.find((x) => x.joint === 4);
+  const extrados = h.find((x) => x.joint === 6);
+  // A hinge on the intrados must open at the extrados, and the reverse.
+  assert.deepEqual(intrados.opposite, [4, 1]);
+  assert.deepEqual(extrados.opposite, [6, 0]);
+  // Along the arch, from the body before to the body after.
+  assert.ok(intrados.along[0] > 0.99, `along ${intrados.along}`);
 });
 
 // ------------------------------------------------- the search and the band --

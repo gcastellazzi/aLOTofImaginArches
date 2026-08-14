@@ -216,14 +216,32 @@ export function findHinges(crossings, joints, tol = TOUCH) {
     return out;
   };
 
+  // Each hinge also carries what is needed to tell an opening joint from an
+  // interpenetrating one: the FAR end of its joint, which is the material that
+  // has to separate, and the direction along the arch from the body before the
+  // hinge to the body after it.
+  const mid = (j) => [(j.a[0] + j.b[0]) / 2, (j.a[1] + j.b[1]) / 2];
+  const along = (i) => {
+    if (i <= 0 || i >= last) return null;
+    const p = mid(joints[i - 1]);
+    const q = mid(joints[i + 1]);
+    const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    return [(q[0] - p[0]) / d, (q[1] - p[1]) / d];
+  };
+
   const hinge = (i, support) => {
     const c = crossings[i];
+    const f = support && clearance(c) > tol ? 'interior' : faceOf(c);
+    const j = joints[i];
     return {
       joint: i,
       s: c.s,
       point: [c.point[0], c.point[1]],
-      face: support && clearance(c) > tol ? 'interior' : faceOf(c),
+      face: f,
       support,
+      // The end of the joint the hinge is NOT at: where the joint must open.
+      opposite: f === 'intrados' ? [j.b[0], j.b[1]] : [j.a[0], j.a[1]],
+      along: along(i),
     };
   };
 
@@ -395,6 +413,65 @@ export function mechanismMotion(hinges, bodyList) {
 }
 
 /**
+ * How fast the joints open, summed over the interior hinges.
+ *
+ * MASONRY CANNOT INTERPENETRATE. A hinge sits at one face of its joint, and
+ * the joint must open at the OTHER face: a hinge on the intrados opens towards
+ * the extrados, and one on the extrados towards the intrados. If the two
+ * bodies instead drive that far end into each other, the mechanism is being
+ * run backwards.
+ *
+ * Which happens exactly half the time, because the sign of a null-space vector
+ * is arbitrary -- it falls out of the elimination, not out of the mechanics.
+ * So the rate is measured and the amplitude takes its sign from it.
+ *
+ * At the far end O of the joint, the relative velocity of the body after the
+ * hinge with respect to the body before it, along the arch, is the opening
+ * rate. Positive is separation.
+ */
+export function jointOpenings(hinges, bodyList, motion) {
+  const at = (m, p) => [m.vx - m.omega * p[1], m.vy + m.omega * p[0]];
+  const out = [];
+  for (let k = 1; k + 1 < hinges.length; k++) {
+    const h = hinges[k];
+    const L = motion.motions[k - 1];
+    const R = motion.motions[k];
+    if (!h.along || !h.opposite || !L || !R) { out.push(0); continue; }
+    const vL = at(L, h.opposite);
+    const vR = at(R, h.opposite);
+    out.push((vR[0] - vL[0]) * h.along[0] + (vR[1] - vL[1]) * h.along[1]);
+  }
+  return out;
+}
+
+/**
+ * Which way to run the mechanism, or whether it can be run at all.
+ *
+ * +1 or -1 when one sense opens every joint; 0 when NO sense does, because
+ * some joints would open only while others closed. A hinge pattern of that
+ * kind is not a collapse mode at all: the masonry would have to pass through
+ * itself. It shows up on a symmetric arch at maximum thrust, where the two
+ * haunch hinges both fall on the intrados and the crown block is left rotating
+ * about a point on the axis rather than dropping, so one haunch opens and the
+ * other shuts.
+ *
+ * @returns {{sense:number, openings:number[]}}
+ */
+export function separationSense(hinges, bodyList, motion, tol = 1e-9) {
+  const openings = jointOpenings(hinges, bodyList, motion);
+  const live = openings.filter((v) => Math.abs(v) > tol);
+  if (!live.length) return { sense: 1, openings };
+  if (live.every((v) => v > 0)) return { sense: 1, openings };
+  if (live.every((v) => v < 0)) return { sense: -1, openings };
+  return { sense: 0, openings };
+}
+
+/** The summed opening rate, kept for the sign alone. */
+export function separationRate(hinges, bodyList, motion) {
+  return jointOpenings(hinges, bodyList, motion).reduce((a, b) => a + b, 0);
+}
+
+/**
  * The displaced arch, at a FINITE amplitude.
  *
  * The instantaneous centres are exactly that: instantaneous. Turning each body
@@ -428,32 +505,64 @@ export function displacedConfiguration(hinges, bodyList, amplitude, steps = 120)
   // springing. Either gives the same point while the chain stays closed.
   const bodyCarrying = (k) => (k - 1 >= 0 && k - 1 < n ? k - 1 : Math.min(k, n - 1));
 
+  // Take the sign from the mechanics rather than from the elimination: the
+  // blocks must come apart at the hinges, not drive into one another.
+  const first = mechanismMotion(hinges, bodyList);
+  // Masonry cannot pass through itself, so the mechanism is run in the sense
+  // that opens the joints. Where no sense does that the pattern is not a
+  // collapse mode; it is drawn anyway, and analyse() flags it, rather than
+  // being silently suppressed.
+  const { sense } = separationSense(hinges, bodyList, first);
+  let previous = first.motions.map((m) => (sense || 1) * m.omega);
+
   const dt = amplitude / steps;
   for (let step = 0; step < steps; step++) {
-    const now = hinges.map((h, k) => ({
-      ...h, point: apply(T[bodyCarrying(k)], h.point),
-    }));
+    // The whole hinge travels with the body that carries it: its point, the
+    // far end of its joint, and the direction along the arch.
+    const T0 = T.map((t) => t);
+    const now = hinges.map((h, k) => {
+      const t = T0[bodyCarrying(k)];
+      return {
+        ...h,
+        point: apply(t, h.point),
+        opposite: h.opposite ? apply(t, h.opposite) : null,
+        along: h.along
+          ? [t.cos * h.along[0] - t.sin * h.along[1],
+            t.sin * h.along[0] + t.cos * h.along[1]]
+          : null,
+      };
+    });
+
     const motion = mechanismMotion(now, bodyList);
+    // The null space is recomputed every step and its sign falls out of the
+    // elimination, so it can flip from one step to the next. Left alone the
+    // arch would judder back and forth instead of opening. Align each step
+    // with the one before it.
+    const dot = motion.motions
+      .reduce((sum, m, i) => sum + m.omega * previous[i], 0);
+    const flip = dot < 0 ? -1 : 1;
+
     const peak = Math.max(...motion.motions.map((m) => Math.abs(m.omega)), 0);
     if (!(peak > 0)) break;                       // nothing turns: no mechanism
+    previous = motion.motions.map((m) => flip * m.omega);
 
     motion.motions.forEach((m, i) => {
-      const w = m.omega / peak;
+      const w = (flip * m.omega) / peak;
       const t = T[i];
       if (m.centre && Math.abs(w) > 1e-12) {
-        const a = w * dt;
-        const ca = Math.cos(a);
-        const sa = Math.sin(a);
+        const ang = w * dt;
+        const ca = Math.cos(ang);
+        const sa = Math.sin(ang);
         const [cx, cy] = m.centre;
         // Rotate about the centre, composed onto what the body has already
-        // done: p -> R(a) (T p - c) + c.
+        // done: p -> R(ang) (T p - c) + c.
         const cos = ca * t.cos - sa * t.sin;
         const sin = sa * t.cos + ca * t.sin;
         const tx = ca * t.tx - sa * t.ty + (cx - (ca * cx - sa * cy));
         const ty = sa * t.tx + ca * t.ty + (cy - (sa * cx + ca * cy));
         T[i] = { cos, sin, tx, ty };
       } else {
-        const k = dt / peak;
+        const k = (flip * dt) / peak;
         T[i] = { ...t, tx: t.tx + m.vx * k, ty: t.ty + m.vy * k };
       }
     });
@@ -501,6 +610,11 @@ export function analyse(crossings, joints, nBlocks, tol = TOUCH) {
   const bodyOf = bodyOfBlock(bodyList, nBlocks);
   const count = degreesOfFreedom(hinges.length);
   const motion = count.dof > 0 ? mechanismMotion(hinges, bodyList) : null;
+  // A positive degree of freedom is not by itself a collapse: the joints have
+  // to be able to open. See separationSense.
+  const sep = motion
+    ? separationSense(hinges, bodyList, motion)
+    : { sense: 1, openings: [] };
   // NOT `...count`: it carries `hinges` and `bodies` as counts, and spreading
   // it over the arrays of the same name silently replaced them with numbers.
   return {
@@ -511,7 +625,12 @@ export function analyse(crossings, joints, nBlocks, tol = TOUCH) {
     bodyCount: count.bodies,
     constraints: count.constraints,
     dof: count.dof,
-    verdict: count.verdict,
+    verdict: sep.sense === 0
+      ? `${count.verdict}, but the joints cannot all open: `
+        + 'this hinge pattern would need the masonry to interpenetrate'
+      : count.verdict,
     motion,
+    openings: sep.openings,
+    kinematic: sep.sense !== 0,
   };
 }

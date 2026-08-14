@@ -106,6 +106,24 @@
         springings.</p>
     </section>
 
+    <section id="domeSection">
+      <h2>Dome slice &mdash; Poleni</h2>
+      <label><input type="checkbox" id="poleni"> Treat the arch as a dome lune</label>
+      <p class="hint">A barrel vault cut into voussoirs gives blocks of constant
+        width. A <em>dome</em> cut into lunes does not: each is bounded by two
+        meridian planes, so it is broad at the major parallel and closes to
+        nothing at the crown. The weights follow, and so does the line of
+        thrust &mdash; this is what Poleni saw in 1748.</p>
+      <label class="inline">Slice angle &deg;
+        <input type="number" id="domeAngle" min="1" max="360" step="1" value="15">
+      </label>
+      <label class="inline">Axis x
+        <input type="number" id="domeAxis" step="0.001" value="0">
+      </label>
+      <button id="pickAxis">Pick the axis on the drawing</button>
+      <p id="domeStatus" class="meta">off &mdash; constant thickness</p>
+    </section>
+
     <section id="mechanismSection">
       <h2>Mechanism</h2>
       <label><input type="checkbox" id="mechOn"> Drive from the thrust</label>
@@ -147,9 +165,14 @@
       <canvas id="main"></canvas>
       <figcaption>Arch and line of thrust</figcaption>
     </figure>
-    <figure>
+    <figure id="side">
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="tabForce" role="tab">Force polygon</button>
+        <button class="tab" id="tabSolid" role="tab">Blocks</button>
+      </div>
       <canvas id="force"></canvas>
-      <figcaption>Force polygon</figcaption>
+      <canvas id="solid" hidden></canvas>
+      <figcaption id="sideCaption">Force polygon</figcaption>
     </figure>
   </div>
 

@@ -100,6 +100,31 @@ main {
   padding: 12px;
   min-height: 0;
 }
+/* The tab strip over the second plot: force polygon or block arch. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.tabs .tab {
+  padding: 3px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-bottom-color: transparent;
+  background: var(--panel);
+  border-radius: 4px 4px 0 0;
+  color: var(--muted);
+}
+.tabs .tab.active {
+  background: #fff;
+  color: inherit;
+  font-weight: 600;
+}
+.tabs .tab:hover { background: #eee; }
+#side canvas[hidden] { display: none; }
+
 figure {
   margin: 0;
   min-width: 0;

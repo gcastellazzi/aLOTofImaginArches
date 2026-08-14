@@ -260,6 +260,7 @@
       <a href="#dof">Three degrees of freedom</a>
       <a href="#admissibility">Admissibility</a>
       <a href="#bow">Reading both drawings</a>
+      <a href="#dome">Poleni's dome</a>
       <a href="#mechanism">Mechanism</a>
       <a href="#cable">Hooke's cable</a>
       <a href="#save">Save &amp; reopen</a>
@@ -329,6 +330,7 @@
           <tr><td><strong>Applied forces</strong></td><td>Add point loads by clicking.</td></tr>
           <tr><td><strong>Scale and units</strong></td><td>Turn pixels into metres; choose the unit system.</td></tr>
           <tr><td><strong>Equilibrium state</strong></td><td>The three sliders that move the line of thrust.</td></tr>
+          <tr><td><strong>Dome slice &mdash; Poleni</strong></td><td>Treat the arch as a lune of a dome: the weights follow the width.</td></tr>
           <tr><td><strong>Mechanism</strong></td><td>Hinges, macro-blocks, the degree of freedom, and the collapse states.</td></tr>
           <tr><td><strong>Admissibility</strong></td><td>The verdict: does the line stay inside the ring?</td></tr>
           <tr><td><strong>Save and reopen</strong></td><td>Write the whole session to a JSON file, and read it back.</td></tr>
@@ -564,6 +566,51 @@
       </div>
     </section>
 
+    <section id="dome">
+      <h2>Poleni's dome</h2>
+      <p>
+        A barrel vault cut into voussoirs gives blocks of <strong>constant width</strong>, and a
+        block weighs its area times that width. A <strong>dome</strong> cut into lunes gives nothing
+        of the sort: each lune is bounded by two meridian planes, so its width is proportional to
+        the distance from the axis &mdash; broad at the major parallel, closing to nothing at the
+        crown. That is what Poleni saw in 1748, and it is why a dome is not an arch.
+      </p>
+      <p>
+        Switch on <strong>Treat the arch as a dome lune</strong> in the Dome panel, set the slice
+        angle, and the weights follow &mdash; and so does the line of thrust. The panel reports how
+        far the lune tapers, which is the number that explains the result before you look at the
+        drawing.
+      </p>
+      <table>
+        <thead><tr><th>Same ring, 16 equal blocks, 15&deg; slice</th><th>barrel</th><th>dome</th></tr></thead>
+        <tbody>
+          <tr><td>share of the total weight taken by a springing block</td><td>6.25&nbsp;%</td><td>9.75&nbsp;%</td></tr>
+          <tr><td>share taken by the crown block</td><td>6.25&nbsp;%</td><td>0.96&nbsp;%</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The <strong>axis of revolution</strong> defaults to the vertical through the mid-point of
+        the two springings, which is right for any symmetric arch. Where it is not &mdash; a
+        historical plate whose dome is off-centre in the crop &mdash; type the abscissa, or press
+        <strong>Pick the axis on the drawing</strong> and click it.
+      </p>
+      <div class="callout">
+        The weight of each voussoir is computed by <strong>Pappus' theorem</strong>,
+        <em>V</em> = <em>A</em>&thinsp;&theta;&thinsp;<em>r&#772;</em>, with <em>r&#772;</em> the
+        distance of the block's centroid from the axis. It is exact for a plane region turned about
+        an axis in its plane &mdash; not an approximation to be refined.
+      </div>
+
+      <h3>Seeing the blocks</h3>
+      <p>
+        The right-hand pane carries two tabs. <strong>Force polygon</strong> is the construction;
+        <strong>Blocks</strong> shows the voussoirs as solids in three dimensions &mdash; straight
+        prisms of the thickness you set, or, with Poleni on, the revolved lune with the axis marked.
+        Drag to turn nothing: the viewpoint is fixed, as it was in the MATLAB version, but you can
+        pan and zoom as in the other plots.
+      </p>
+    </section>
+
     <section id="mechanism">
       <h2>Mechanism and collapse</h2>
       <p>
@@ -622,6 +669,23 @@
         theorem &mdash; the software finds it by solving the velocity field rather than by
         construction, so it works for five hinges as well as four.
       </p>
+      <h3>Masonry cannot pass through itself</h3>
+      <p>
+        A hinge sits at one face of its joint, so the joint has to open at the <em>other</em>: a
+        hinge on the intrados opens towards the extrados. The software measures that opening and
+        runs the mechanism in whichever sense produces it &mdash; the direction is taken from the
+        mechanics, not from the arithmetic.
+      </p>
+      <p>
+        Some hinge patterns have <strong>no good sense at all</strong>, and that is worth seeing.
+        On a symmetric ring at maximum thrust both haunch hinges fall on the intrados, which leaves
+        the crown block turning about a point on the axis instead of dropping: one haunch opens
+        exactly as the other shuts. The panel says so and the displacement slider stays inactive,
+        rather than animating a motion the stones could not perform. <strong>A positive degree of
+        freedom is not by itself a collapse mode</strong> &mdash; the joints have to be able to
+        open.
+      </p>
+
       <div class="callout">
         <strong>Why the drawing is integrated rather than simply rotated:</strong> an instantaneous
         centre is exactly that, instantaneous. Turning each block about its centre by a finite angle
