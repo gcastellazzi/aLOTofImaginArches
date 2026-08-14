@@ -1,0 +1,43 @@
+% Figure: three equilibrium states of the same ring.
+%
+% Data from makedata.js. The middle line is the one the code FOUND to be
+% admissible by search; the other two are in equilibrium and are not.
+\begin{tikzpicture}
+\begin{axis}[
+  lotaxis, width=0.92\linewidth, height=5.2cm,
+  xlabel={$x/r_i$}, ylabel={$y/r_i$},
+  xmin=-1.25, xmax=1.25, ymin=-0.04, ymax=1.24,
+  % Below the axis: inside it, the legend sits on top of the very masonry the
+  % reader is being asked to check the lines against.
+  legend style={at={(0.5,-0.30)}, anchor=north, draw=lotgrey!50,
+                legend columns=1, font=\scriptsize},
+  legend cell align=left,
+  grid=none,
+]
+% The ring, shaded between the two faces so that "inside the masonry" is
+% something the eye can check rather than infer.
+\addplot [name path=ri, draw=none, forget plot]
+  table [x=x, y=y] {figures/data/ring_intrados.dat};
+\addplot [name path=ro, draw=none, forget plot]
+  table [x=x, y=y] {figures/data/ring_extrados.dat};
+\addplot [lotbrick!45, forget plot] fill between [of=ri and ro];
+\addplot [lotgrey, line width=0.6pt, forget plot]
+  table [x=x, y=y] {figures/data/ring_intrados.dat};
+\addplot [lotgrey, line width=0.6pt, forget plot]
+  table [x=x, y=y] {figures/data/ring_extrados.dat};
+\addplot [lotgrey!70, line width=0.25pt, forget plot]
+  table [x=x, y=y] {figures/data/ring_joints.dat};
+
+\addplot [lotred, line width=1.0pt, dash pattern=on 3pt off 2pt]
+  table [x=x, y=y] {figures/data/lot_mid.dat};
+\addlegendentry{ends pinned, $s=\tfrac12$ --- leaves the ring}
+
+\addplot [lotblue, line width=1.4pt]
+  table [x=x, y=y] {figures/data/lot_free.dat};
+\addlegendentry{ends free --- admissible}
+
+\addplot [lotgreen, line width=1.0pt, dash pattern=on 1pt off 1.5pt]
+  table [x=x, y=y] {figures/data/lot_flat.dat};
+\addlegendentry{thrust too high --- leaves the ring}
+\end{axis}
+\end{tikzpicture}

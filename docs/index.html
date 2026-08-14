@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>aLOTofImaginArches — User Guide</title>
-  <meta name="description" content="User guide for the MATLAB educational app aLOTofImaginArches: funicular analysis and line of thrust for masonry arches.">
+  <meta name="description" content="User guide for aLOTofImaginArches: interactive funicular analysis and line of thrust for masonry arches, in the browser.">
   <style>
     :root {
       --bg: #f6f7f9;
@@ -188,6 +188,26 @@
 
     .steps li { margin-bottom: 0.5rem; }
 
+    .launch {
+      display: inline-block;
+      margin-top: 0.9rem;
+      padding: 0.6rem 1.15rem;
+      background: #fff;
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+    }
+
+    .launch:hover { background: var(--accent-soft); }
+
+    .legacy { opacity: 0.95; }
+
+    .legacy h2 { color: var(--muted); border-bottom-color: var(--border); }
+
+    .keyparam th:first-child { width: 34%; }
+
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -217,343 +237,499 @@
       <div>
         <h1>aLOTofImaginArches — User Guide</h1>
         <p>
-          Interactive educational software for masonry arches: define geometry, build the force polygon,
-          and explore the line of thrust (LOT) and funicular solutions.
-          Designed for graduate courses in masonry and historical structures (MHMS, HMWS).
+          Interactive graphical statics of masonry arches: trace an arch over a photograph, build the
+          force polygon, and move the line of thrust (LOT) through its three degrees of freedom while
+          the software checks whether it stays inside the masonry.
+          For graduate courses in masonry and historical structures (MHMS, HMWS).
         </p>
+        <a class="launch" href="app/">Open the application &rarr;</a>
       </div>
     </div>
   </header>
 
   <nav class="toc" aria-label="Table of contents">
     <div class="wrap">
-      <a href="#requirements">Requirements</a>
-      <a href="#download">Download</a>
+      <a href="#start">Start here</a>
+      <a href="#idea">The idea</a>
       <a href="#interface">Interface</a>
       <a href="#workflow">Workflow</a>
-      <a href="#arch-definition">Arch Definition</a>
-      <a href="#thrust-line">Thrust Line</a>
-      <a href="#graphics">Graphics &amp; Units</a>
       <a href="#examples">Examples</a>
-      <a href="#pdf-guides">PDF guides</a>
-      <a href="#tips">Tips</a>
+      <a href="#trace">Trace your own</a>
+      <a href="#scale">Scale &amp; units</a>
+      <a href="#forces">Loads</a>
+      <a href="#dof">Three degrees of freedom</a>
+      <a href="#admissibility">Admissibility</a>
+      <a href="#bow">Reading both drawings</a>
+      <a href="#mechanism">Mechanism</a>
+      <a href="#cable">Hooke's cable</a>
+      <a href="#save">Save &amp; reopen</a>
+      <a href="#tips">Troubleshooting</a>
+      <a href="#matlab">MATLAB version</a>
     </div>
   </nav>
 
   <main>
-    <section id="requirements">
-      <h2>Requirements &amp; launch</h2>
-      <ol>
-        <li>Install <strong>MATLAB R2019a</strong> or later (App Designer app).</li>
-        <li>Clone or download this repository.</li>
-        <li>Add the repository folder to the MATLAB path, or open the project from that folder.</li>
-        <li>Run the app:
-          <ul>
-            <li>Double-click <code>aLOTofImaginArches.mlapp</code> in the MATLAB Current Folder browser, or</li>
-            <li>From the command window: <code>app = aLOTofImaginArches;</code></li>
-          </ul>
-        </li>
-      </ol>
+    <section id="start">
+      <h2>Start here</h2>
+      <p>
+        <a href="app/"><strong>Open the application</strong></a>. There is nothing to install and no
+        licence to buy: it is a web page. It runs from any modern browser, on your own machine, offline
+        once the page has loaded.
+      </p>
+      <p>
+        Everything you do stays in your browser. No image, no traced arch and no saved file is ever
+        uploaded anywhere — which also means that closing the tab loses your work unless you
+        <a href="#save">save it</a> first.
+      </p>
       <div class="callout">
-        <strong>External functions:</strong> keep the <code>external_functions/</code> folder on the path
-        (same directory as the <code>.mlapp</code> file). The app uses helpers for intersections, arrows,
-        freehand selection, and the admissible domain.
+        <strong>Reading the source:</strong> the application is plain JavaScript modules with no build
+        step, so the code that runs is exactly the code in the repository, under
+        <code>docs/app/js/</code>. The mechanics lives in <code>js/core/</code> and is worth reading:
+        <code>statics.js</code> is the force polygon and the funicular polygon, with the classical terms
+        as its variable names.
       </div>
     </section>
 
-    <section id="download">
-      <h2>Download &amp; repository layout</h2>
+    <section id="idea">
+      <h2>The idea in one paragraph</h2>
       <p>
-        The app is distributed as a MATLAB App Designer file plus helper functions and teaching examples.
-        Keep the repository structure unchanged when moving the app to another machine.
+        A masonry arch stands not because it is in <em>the</em> state of equilibrium but because it is in
+        <em>one</em> of infinitely many. Under Heyman's assumptions — no tensile strength, unlimited
+        compressive strength, no sliding — the <strong>safe theorem</strong> says that if you can find
+        <em>any</em> line of thrust in equilibrium with the loads that lies wholly within the masonry,
+        the arch is safe. For a two-dimensional arch that line has three free parameters: the
+        <em>&infin;<sup>3</sup></em> of the classical literature. This software exists so that you can
+        take hold of those three parameters and move them.
       </p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Path</th>
-            <th>Contents</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>aLOTofImaginArches.mlapp</code></td>
-            <td>Main MATLAB App Designer application.</td>
-          </tr>
-          <tr>
-            <td><code>external_functions/</code></td>
-            <td>Helper routines for arrows, intersections, freehand drawing, point selection, and admissibility checks.</td>
-          </tr>
-          <tr>
-            <td><code>Examples/</code></td>
-            <td>Ready-to-open <code>.mat</code> models for lectures and tutorials.</td>
-          </tr>
-          <tr>
-            <td><code>docs/</code></td>
-            <td>This web guide, images, and PDF tutorials.</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <ol class="steps">
-        <li>Download the repository from <a href="https://github.com/gcastellazzi/aLOTofImaginArches">GitHub</a> using <strong>Code → Download ZIP</strong>, or clone it with Git.</li>
-        <li>Extract the ZIP if needed, then open the folder in MATLAB.</li>
-        <li>Double-click <code>aLOTofImaginArches.mlapp</code>, or run <code>app = aLOTofImaginArches;</code>.</li>
-      </ol>
+      <p>
+        The weights of the voussoirs, taken in order from one springing to the other, are laid end to end
+        down a vertical <strong>load line</strong>. A point off that line, the <strong>pole</strong>, is
+        joined to every division of it; those segments are the <strong>rays</strong>. Back in the drawing,
+        starting from a springing, you walk parallel to the first ray until the vertical through the first
+        block centroid, turn onto the second ray, and so on. The polygon that results is the
+        <strong>funicular polygon</strong>, and for an arch it is the <strong>line of thrust</strong>.
+      </p>
     </section>
 
     <section id="interface">
       <h2>Main interface</h2>
       <p>
-        The window is organized around three main tabs on the left, a central interactive plot,
-        and auxiliary views on the right (3D view and force polygon).
+        The window has a control panel on the left and two plots: the <strong>arch and line of thrust</strong>,
+        and the <strong>force polygon</strong>. The graphics deliberately imitate the MATLAB original —
+        boxed axes with inward ticks, a pale grid, translucent force bands — so that the pictures in the
+        course slides and the pictures on screen mean the same thing.
       </p>
-
-      <figure>
-        <img src="images/app_screenshot.png" alt="Main window of aLOTofImaginArches showing Arch Definition tab, central plot, and side panels">
-        <figcaption>Main window — <em>Arch Definition</em> tab with block-based geometry controls.</figcaption>
-      </figure>
-
       <table>
         <thead>
-          <tr>
-            <th>Area</th>
-            <th>Purpose</th>
-          </tr>
+          <tr><th>Panel section</th><th>What it does</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td><strong>Left tabs</strong></td>
-            <td><em>Arch Definition</em>, <em>Thrust Line</em>, <em>Mechanism</em> — model setup and analysis.</td>
-          </tr>
-          <tr>
-            <td><strong>Central plot</strong></td>
-            <td>Geometry, blocks, forces, reactions, sketch, background image, line of thrust.</td>
-          </tr>
-          <tr>
-            <td><strong>Bottom panel</strong></td>
-            <td><em>Graphics</em>, <em>Save/Load Example</em>, material properties, <em>Units</em>.</td>
-          </tr>
-          <tr>
-            <td><strong>Right panel</strong></td>
-            <td><em>3D View</em> and <em>Force Polygon (FP)</em> for visualizing resultants.</td>
-          </tr>
-          <tr>
-            <td><strong>Block data table</strong></td>
-            <td>Block number, area <em>A</em>, thickness <em>t</em>, weight <em>W</em>.</td>
-          </tr>
+          <tr><td><strong>Example</strong></td><td>Load one of the stored examples.</td></tr>
+          <tr><td><strong>Trace your own</strong></td><td>Load an image, trace intrados and extrados, generate blocks.</td></tr>
+          <tr><td><strong>Applied forces</strong></td><td>Add point loads by clicking.</td></tr>
+          <tr><td><strong>Scale and units</strong></td><td>Turn pixels into metres; choose the unit system.</td></tr>
+          <tr><td><strong>Equilibrium state</strong></td><td>The three sliders that move the line of thrust.</td></tr>
+          <tr><td><strong>Mechanism</strong></td><td>Hinges, macro-blocks, the degree of freedom, and the collapse states.</td></tr>
+          <tr><td><strong>Admissibility</strong></td><td>The verdict: does the line stay inside the ring?</td></tr>
+          <tr><td><strong>Save and reopen</strong></td><td>Write the whole session to a JSON file, and read it back.</td></tr>
         </tbody>
       </table>
-
-      <h3>Plot toolbar</h3>
-      <ul>
-        <li><strong>Reset View</strong> — restore default axis limits.</li>
-        <li><strong>Pan</strong> — move the view without changing data.</li>
-        <li><strong>Scroll Zoom on/off</strong> — enable or disable mouse-wheel zoom.</li>
-        <li><strong>Show Structural scale</strong> — display a reference length on the plot.</li>
-      </ul>
+      <p>
+        Under the plots runs a <strong>toolbar</strong> carrying the unit system, the switches for what
+        to draw, and the view reset. It is there rather than in the panel because those are the controls
+        you reach for constantly: the panel scrolls, the toolbar does not, and the plots keep the full
+        height of the window whatever you are doing in the panel.
+      </p>
+      <p>
+        Both plots keep <strong>equal scales on the two axes</strong>. This matters more than it sounds:
+        a ten per cent anisotropy is invisible to the eye and would falsify every length you read off the
+        drawing, so the property is enforced whenever the window changes shape.
+      </p>
     </section>
 
     <section id="workflow">
       <h2>Recommended workflow</h2>
       <ol class="steps">
-        <li>Set <strong>Units</strong> (SI, N·mm, kg·cm, …) in the bottom panel.</li>
-        <li>Define the arch geometry under <strong>Arch Definition</strong> (blocks, circular, or sketch).</li>
-        <li>Assign block thickness and material properties; use <strong>Plot blocks</strong> to verify.</li>
-        <li>Switch to <strong>Thrust Line</strong>: define springing points A and B, then build preliminary and final force polygons (FOP/FUP).</li>
-        <li>Explore horizontal thrust with the slider and inspect the line of thrust.</li>
-        <li>Save your session from <strong>Save/Load Example</strong>, or open a prepared <code>.mat</code> file from <code>Examples/</code>.</li>
+        <li><strong>Look at a stored example first</strong> to see what a finished analysis looks like.</li>
+        <li><strong>Load your own image</strong> — a photograph, a survey drawing, a scan of a plate.</li>
+        <li><strong>Trace the intrados, then the extrados.</strong></li>
+        <li><strong>Choose the number of voussoirs</strong> and generate the blocks.</li>
+        <li><strong>Set the scale</strong> from a known distance, and the out-of-plane thickness and unit weight.</li>
+        <li><strong>Add loads</strong>, if the exercise has any.</li>
+        <li><strong>Hunt for an admissible line</strong> with the three sliders.</li>
+        <li><strong>Save</strong> before you close the tab.</li>
       </ol>
-
-      <figure>
-        <img src="images/example_funicular.png" alt="Funicular analysis result with force polygon and arch blocks">
-        <figcaption>Typical result: funicular polygon and thrust line on a block model.</figcaption>
-      </figure>
-    </section>
-
-    <section id="arch-definition">
-      <h2>Arch Definition</h2>
-      <p>
-        Under <em>Arch Definition</em>, choose one of three sub-tabs:
-        <strong>by Blocks</strong>, <strong>Circular</strong>, or <strong>by Sketch</strong>.
-        You can also use <strong>Load Data</strong> to import existing block data.
-      </p>
-
-      <h3>by Blocks</h3>
-      <ul>
-        <li><strong>Add rectangular block</strong> / <strong>Add irregular Block</strong> — create voussoirs interactively on the plot.</li>
-        <li><strong>Update data</strong> — refresh block areas, centroids, and weights after edits.</li>
-        <li><strong>Plot Geometry</strong> — draw the current block outline.</li>
-        <li><strong>View/Edit block data</strong> — open the block table for manual edits.</li>
-        <li><strong>Move Block Node</strong>, <strong>Translate Blocks</strong>, <strong>Scale Blocks</strong> — geometric editing tools.</li>
-        <li><strong>Delete all</strong> / <strong>Delete by N.</strong> — remove blocks.</li>
-        <li><strong>Poleni hp.</strong> — toggle Poleni-style horizontal projection aids (useful for dome/arch teaching examples).</li>
-      </ul>
-
-      <h3>Circular arch</h3>
-      <ol class="steps">
-        <li>Click <strong>Define Center</strong> and pick the arch centre on the plot.</li>
-        <li>Set inner/outer radius, start/end angles, number of blocks, and thickness.</li>
-        <li>Click <strong>Calculate Arch</strong> to generate voussoirs along the arc.</li>
-      </ol>
-      <p>See the step-by-step PDF in <a href="#pdf-guides">PDF guides</a> for a full circular-arch tutorial.</p>
-
-      <h3>by Sketch</h3>
-      <ol class="steps">
-        <li><strong>Load image</strong> — import a reference photo or drawing (optional).</li>
-        <li><strong>Pick Reference</strong> — set scale by clicking two points and entering the real distance.</li>
-        <li><strong>Flip X</strong> / <strong>Flip Y</strong> / <strong>Scale Image</strong> — align the background.</li>
-        <li><strong>Sketch the arch</strong> — draw the intrados/extrados freehand.</li>
-        <li><strong>Define Center</strong>, then <strong>Define Left</strong> and <strong>Define Right</strong> springing regions as prompted.</li>
-        <li>Set subdivision count and click <strong>Compute blocks</strong>.</li>
-      </ol>
-
-      <h3>Background image</h3>
-      <p>
-        When a background is loaded, use the <em>Graphics</em> tab switches to show/hide it and
-        <strong>Plot Background Image</strong> to refresh. <strong>Flip Y axis</strong> inverts the plot
-        if your image coordinate system differs from the structural axes.
-      </p>
-    </section>
-
-    <section id="thrust-line">
-      <h2>Thrust Line</h2>
-      <p>
-        This tab connects geometry to statics: you define supports, build force polygons, and study
-        how horizontal thrust changes the admissible line of thrust inside the masonry.
-      </p>
-
-      <ol class="steps">
-        <li><strong>Define Point A</strong> and <strong>Define Point B</strong> — springing locations (click on the plot).</li>
-        <li><strong>Preliminar FOP</strong> / <strong>Preliminar FUP</strong> — preliminary lower/upper funicular envelopes.</li>
-        <li><strong>Final FOP</strong> / <strong>Final FUP</strong> — refined polygons after block weights and geometry are set.</li>
-        <li><strong>Plot Reactions</strong> — show support resultants.</li>
-        <li>Use the <strong>horizontal thrust slider</strong> (set limits with <strong>Update Slider</strong>) to sweep thrust and update the LOT.</li>
-        <li><strong>Inspect Line of thrust</strong> — detailed inspection of LOT segments.</li>
-        <li><strong>Check admissbility</strong> — verify whether the thrust line stays inside the block kernel.</li>
-        <li><strong>Plot Cable analogy</strong> — inverted funicular (hanging chain) visualization.</li>
-      </ol>
-
-      <p>
-        Force resultants appear in the <strong>Force Polygon (FP)</strong> panel on the right.
-        Adjust <strong>Force shrink factor</strong> if arrows or polygon edges overlap.
-      </p>
-
-      <div class="grid-2">
-        <figure>
-          <img src="images/example_funicular_poleni.png" alt="Poleni-style funicular study with thrust line">
-          <figcaption>Poleni-style funicular study.</figcaption>
-        </figure>
-        <figure>
-          <img src="images/example_poleni.png" alt="Historical Poleni dome study reproduced in the software">
-          <figcaption>Historical Poleni dome study (teaching example).</figcaption>
-        </figure>
+      <div class="callout">
+        Steps 5 and 6 can be done in either order, but do them <em>before</em> reading any force off the
+        screen: until a scale is set, every length is in pixels and every &ldquo;weight&rdquo; is pixels
+        squared times a density.
       </div>
     </section>
 
-    <section id="graphics">
-      <h2>Graphics, units &amp; material properties</h2>
+    <section id="examples">
+      <h2>Stored examples</h2>
+      <p>
+        Twenty-eight examples come with the application, converted from the <code>.mat</code> files of the
+        MATLAB version. Pick one from the <strong>Example</strong> menu; the background image, the blocks,
+        the weights and the stored solution all come with it.
+      </p>
+      <p>They are not all alike, and the application tells you which kind you have opened:</p>
+      <table>
+        <thead>
+          <tr><th>Kind</th><th>How many</th><th>What happens</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Complete and reproducible</td><td>15</td>
+            <td>The force polygon and the thrust line are <em>recomputed from the geometry</em> and agree
+                with the stored solution to machine precision. The thrust slider is live.</td>
+          </tr>
+          <tr>
+            <td>No stored solution</td><td>6</td>
+            <td>Geometry only; the solution is computed fresh.</td>
+          </tr>
+          <tr>
+            <td>Internally inconsistent</td><td>6</td>
+            <td>The stored solution does not correspond to the stored geometry — usually because loads
+                were applied but never written to the file, or blocks were added afterwards. A warning
+                appears and the <em>stored</em> line is drawn, because the application will not
+                manufacture one it cannot justify.</td>
+          </tr>
+        </tbody>
+      </table>
+      <figure>
+        <img src="images/example_funicular_poleni.png" alt="Poleni example with the funicular solution">
+        <figcaption>
+          Poleni's plate of 1748 for the dome of St Peter's — the drawing in which the hanging-chain
+          analogy was first put to a real structure, and the founding example of this method.
+        </figcaption>
+      </figure>
+    </section>
 
-      <h3>Graphics tab</h3>
+    <section id="trace">
+      <h2>Trace your own arch</h2>
+      <ol class="steps">
+        <li><strong>Load an image</strong> under <em>Trace your own</em>. Any photograph will do; a
+            straight-on elevation gives a truer geometry than an oblique one.</li>
+        <li><strong>Trace intrados</strong> — click along the inner face. Double-click, or press
+            <kbd>Enter</kbd>, to finish; <kbd>Esc</kbd> cancels.</li>
+        <li><strong>Trace extrados</strong> — the outer face, the same way. Direction does not matter:
+            a reversed curve is detected and put right.</li>
+        <li><strong>Blocks</strong> — set how many voussoirs you want and press
+            <strong>Generate blocks</strong>. The two curves are resampled by arc length, so the joints
+            come out evenly spaced along the arch rather than evenly spaced in <em>x</em>.</li>
+      </ol>
+      <p>The trace is checked before it is used. You will be told if:</p>
       <ul>
-        <li><strong>Plot blocks</strong>, <strong>Plot Forces</strong>, <strong>Plot Reactions</strong>, <strong>Plot Sketch</strong></li>
-        <li><strong>Clear Interactive Area</strong> / <strong>Clear Sketch</strong> — reset overlays (not block data).</li>
-        <li><strong>forces factor</strong> and <strong>alpha W</strong> — scale force arrows and weight display.</li>
-        <li>Switches: <strong>Force Magnitude</strong>, <strong>Background Image</strong>, <strong>Sketched Geometry</strong>, <strong>Text/Labels</strong>.</li>
-        <li><strong>Show Force Scale</strong> — reference for force arrow length.</li>
+        <li>there are too few points to define a curve;</li>
+        <li>the two curves coincide — there is no masonry between them;</li>
+        <li>the two curves <strong>cross</strong>, which produces inverted blocks. This one is easy to do
+            by accident near a springing and impossible to see afterwards, so it is caught explicitly.</li>
       </ul>
+      <div class="callout">
+        <strong>Choosing the number of blocks:</strong> more blocks is not automatically better. The
+        computed line of thrust is a polygon inscribed in the true funicular curve, and a coarse polygon
+        can &ldquo;cut corners&rdquo; that a real arch cannot — so a very coarse subdivision is slightly
+        optimistic. Sixteen to thirty is a sensible range for a semicircular ring.
+      </div>
+    </section>
 
-      <h3>Units tab</h3>
+    <section id="scale">
+      <h2>Scale and units</h2>
       <p>
-        Presets include <strong>SI</strong>, <strong>Nmm</strong>, <strong>kg cm</strong>, and individual units for length, mass, force, and pressure.
-        The status line under the main plot shows the active unit system, e.g.
-        <code>Current units: [ m ] [ kg ] [ N ] [ Pa ]</code>.
+        Until you set a scale, everything is in pixels. To set one, press <strong>Pick reference</strong>,
+        click two points whose real separation you know, and type that distance. Lengths then scale by
+        <em>k</em>, areas by <em>k</em><sup>2</sup>, and weights accordingly.
       </p>
-
-      <h3>Blocks Material properties</h3>
+      <table class="keyparam">
+        <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Unit system</strong></td><td>SI (m, kN), N–mm, or kgf–cm.</td></tr>
+          <tr><td><strong>Unit weight</strong></td>
+              <td>A <em>weight</em> density, so that <em>W</em> = area &times; thickness &times; &gamma;
+                  with no hidden <em>g</em>. About 20 kN/m³ for masonry.</td></tr>
+          <tr><td><strong>Thickness</strong></td>
+              <td>The out-of-plane depth, as a <em>physical</em> length. Getting this wrong is a factor of
+                  the scale on every force, and nothing downstream would flag it.</td></tr>
+        </tbody>
+      </table>
       <p>
-        Set specific weight and block thickness defaults. Use <strong>Define Thickness</strong> or edit the block table
-        for per-block overrides. Weights update when you click <strong>Update data</strong>.
-      </p>
-
-      <h3>Mechanism tab</h3>
-      <p>
-        Tools for mechanism and limit analysis (development area). Use together with LOT inspection when
-        teaching collapse mechanisms.
+        After scaling, the application reports the <strong>span and rise</strong> of the arch. Read them.
+        They are the quickest check that the reference distance was entered correctly: if the span of a
+        bridge comes out as three metres, something went in wrong.
       </p>
     </section>
 
-    <section id="examples">
-      <h2>Examples &amp; save/load</h2>
+    <section id="forces">
+      <h2>Applied loads</h2>
       <p>
-        Prepared models live in the repository folder <code>Examples/</code>. From the app:
+        Type a magnitude, press <strong>Add a force</strong>, and click where it acts. Loads are taken as
+        vertical and downward.
       </p>
-      <ol>
-        <li><strong>Load Examples folder</strong> — point to the <code>Examples</code> directory.</li>
-        <li><strong>Open Example</strong> — load a <code>.mat</code> file (<code>saved_variables</code> structure).</li>
-        <li><strong>Save to folder Examples</strong> — export your current session.</li>
-      </ol>
+      <p>
+        A load and a voussoir weight are treated identically by the construction — both are stations on
+        the load line — so a point load simply joins the same ordered sequence as an extra station, and
+        the thrust line gains one vertex at its abscissa.
+      </p>
+    </section>
 
+    <section id="dof">
+      <h2>The three degrees of freedom</h2>
+      <p>
+        This is the heart of the tool. Three sliders, three parameters, and every combination is an
+        equilibrium state — though only some of them are <em>admissible</em>.
+      </p>
+      <table class="keyparam">
+        <thead><tr><th>Slider</th><th>What it moves</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Horizontal thrust</strong></td>
+            <td>The pole's distance from the load line. Moving the pole away raises the thrust and
+                flattens the line.</td>
+          </tr>
+          <tr>
+            <td><strong>Start on the springing joint</strong></td>
+            <td>Where the line leaves its springing: 0 at the intrados, 1 at the extrados.</td>
+          </tr>
+          <tr>
+            <td><strong>Reaction at that springing</strong></td>
+            <td>The pole's height along the load line, which is exactly how the total weight divides
+                between the two vertical reactions.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The <em>far</em> end is not a fourth parameter: it follows. The last ray is carried on until it
+        meets the other joint, and the application reports where it lands. If it lands outside that joint,
+        the line has left the masonry at the springing and the state is not admissible.
+      </p>
+      <div class="callout">
+        The last two sliders need a <strong>traced</strong> arch, because they slide the ends along
+        joints, and only a traced arch has joints. A stored example carries just its two springing points,
+        so for those only the thrust is free.
+      </div>
+    </section>
+
+    <section id="admissibility">
+      <h2>Admissibility</h2>
+      <p>
+        For every joint the application computes where the line crosses it, as a fraction running from
+        0 at the intrados to 1 at the extrados. The verdict tells you either how many joints the line
+        violates, which is worst and on which face — or, when it fits, how much room is left.
+      </p>
+      <p>
+        Switch on <strong>Joints and crossings</strong> under <em>Show</em> to see the crossings marked
+        one by one. A joint where the line runs close to a face is where a hinge would form.
+      </p>
+      <h3>What to try in class</h3>
+      <p>
+        Trace a semicircular ring and make it thin. Below a certain thickness <em>no</em> setting of the
+        three sliders is admissible: that is the classical minimum-thickness problem, and Heyman's answer
+        for a continuous ring is <em>t</em>/<em>r</em><sub>i</sub> &asymp; 0.108. Measured with this
+        software on a ring of 16 voussoirs, the least admissible ratio is about
+        <strong>0.115</strong> — and, without being told what to look for, the limit line it finds runs
+        through the <strong>extrados at both springings</strong> and needs a thrust of about one fifth of
+        the total weight, which is the textbook limit state.
+      </p>
+      <div class="callout">
+        Try the same thing with the two end sliders left at their midpoints and you will find nothing
+        admissible until about 0.198 — nearly twice Heyman's value. Pinning the ends of the line throws
+        away two of the three degrees of freedom, and the criterion becomes far stricter than the safe
+        theorem actually is. It is a good illustration of why the multiplicity matters.
+      </div>
+    </section>
+
+    <section id="bow">
+      <h2>Reading the two drawings together</h2>
+      <p>
+        In the force polygon the <strong>rays</strong> are drawn dashed, because they are construction
+        lines rather than forces: the only full lines there are the load line itself and the polygon.
+      </p>
+      <p>
+        Switch on <strong>Ray letters</strong> in the toolbar and each ray is lettered <em>a</em>,
+        <em>b</em>, <em>c</em>&hellip; down the load line, with <strong>the same letter on the
+        corresponding segment of the line of thrust</strong>. Segment <em>c</em> of the thrust line is
+        parallel to ray <em>c</em>, and the length of that ray is the force the segment carries. This is
+        Bow's notation, and it is what lets you carry a force from one drawing to the other by eye.
+      </p>
+      <div class="callout">
+        Past <em>z</em> the sequence continues <em>aa</em>, <em>ba</em>, <em>ca</em>&hellip;: the
+        first character cycles fastest, which keeps the letters that fall next to each other on the
+        drawing short and easy to tell apart.
+      </div>
+      <div class="callout">
+        On an arch with many voussoirs not every ray is lettered — they would overlap into a smear.
+        The application letters every second, third or fourth, whichever keeps the drawing readable,
+        and uses the <em>same</em> spacing in both plots so the correspondence holds.
+      </div>
+    </section>
+
+    <section id="mechanism">
+      <h2>Mechanism and collapse</h2>
+      <p>
+        The line of thrust cannot leave the thickness of the arch. Where it would, it stays
+        <strong>hooked</strong> at the point &mdash; intrados or extrados &mdash; between two
+        voussoirs, and that point is a <strong>hinge</strong>. While the line runs clear of both
+        faces nothing is located: the arch is a single body on two supports and its equilibrium
+        state is not determined. Each face the line touches divides the arch into one more rigid
+        macro-block.
+      </p>
+
+      <h3>The count</h3>
+      <p>
+        Take the two springings as hinges throughout. Then <em>h</em> hinges carry
+        <em>h</em>&nbsp;&minus;&nbsp;1 bodies, each with three freedoms in the plane, and each hinge
+        removes two:
+      </p>
       <table>
         <thead>
           <tr>
-            <th>Example file (selection)</th>
-            <th>Topic</th>
+            <th>interior hinges</th><th>hinges <em>h</em></th><th>bodies <em>b</em></th>
+            <th>3<em>b</em> &minus; 2<em>h</em></th><th>state</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>Example_1_Circular_arch_comparison.mat</code></td><td>Circular arch, comparison cases</td></tr>
-          <tr><td><code>Example_3_Heyman_arch.mat</code></td><td>Heyman arch</td></tr>
-          <tr><td><code>Example_4_Amiens.mat</code></td><td>Amiens cathedral arch</td></tr>
-          <tr><td><code>Poleni_Example*.mat</code></td><td>Poleni dome / arch studies</td></tr>
-          <tr><td><code>Utah_Arch.mat</code></td><td>Landscape / Utah arch sketch workflow</td></tr>
-          <tr><td><code>Ctesifonte_01.mat</code>, <code>Ctesifonte_02.mat</code></td><td>Historical case studies</td></tr>
+          <tr><td>0</td><td>2</td><td>1</td><td>&minus;1</td>
+              <td>once hyperstatic &mdash; not determined</td></tr>
+          <tr><td>1</td><td>3</td><td>2</td><td>0</td>
+              <td>isostatic &mdash; the three-pin arch, equilibrium possible</td></tr>
+          <tr><td>2</td><td>4</td><td>3</td><td>+1</td>
+              <td>a mechanism &mdash; collapse</td></tr>
         </tbody>
       </table>
+
+      <h3>Driving it</h3>
+      <p>
+        Switch on <strong>Drive from the thrust</strong> in the Mechanism panel. The thrust slider
+        alone then commands the line: the other two parameters are chosen for you to hold it as far
+        from both faces as it will go, so hinges appear only when the thrust really forces them.
+        Start in the middle and walk outwards, and you will see the count above happen in order.
+      </p>
+      <p>
+        <strong>H min</strong> and <strong>H max</strong> jump to the two collapse states. On a
+        semicircular ring the software recovers the classical patterns without being told what to
+        look for: five hinges at minimum thrust &mdash; the springings, the intrados at the haunches
+        and the extrados at the crown &mdash; and four at maximum thrust.
+      </p>
+
+      <h3>The kinematics</h3>
+      <p>
+        Once the arch is a mechanism the <strong>Displacement</strong> slider comes alive and the
+        macro-blocks turn about their instantaneous centres, marked
+        <em>C</em><sub>1</sub>, <em>C</em><sub>2</sub>&hellip; on the drawing. The bodies pinned to
+        the ground turn about their own springings; the centre of a middle body is where the two
+        lines through the neighbouring centres and the hinges they share meet, which is Kennedy's
+        theorem &mdash; the software finds it by solving the velocity field rather than by
+        construction, so it works for five hinges as well as four.
+      </p>
+      <div class="callout">
+        <strong>Why the drawing is integrated rather than simply rotated:</strong> an instantaneous
+        centre is exactly that, instantaneous. Turning each block about its centre by a finite angle
+        keeps the blocks rigid but pulls the hinges apart &mdash; visibly, at any amplitude worth
+        looking at. The motion is therefore advanced in small steps with the centres recomputed each
+        time, so the blocks stay rigid <em>and</em> the hinges stay shut.
+      </div>
     </section>
 
-    <section id="pdf-guides">
-      <h2>Step-by-step PDF guides</h2>
+    <section id="cable">
+      <h2>Hooke's cable</h2>
       <p>
-        These click-by-click PDFs complement this page (same content as linked from the repository README):
+        Switch on <strong>Hooke's cable</strong> to see the same polygon reflected about the chord
+        joining the two springings: the shape a chain would hang in under the same loads, hung from
+        the very points <em>A</em> and <em>B</em> the arch springs from. The two ends stay anchored
+        however unequal the springings are.
       </p>
+      <p style="text-align:center; font-style:italic;">
+        Ut pendet continuum flexile, sic stabit contiguum rigidum inversum.
+      </p>
+      <p style="text-align:center; color:var(--muted);">
+        &ldquo;As hangs the flexible line, so but inverted will stand the rigid arch.&rdquo;
+        — Robert Hooke, 1676
+      </p>
+    </section>
+
+    <section id="save">
+      <h2>Save and reopen</h2>
+      <p>
+        <strong>Save work&hellip;</strong> writes the whole session to a single JSON file: the traced
+        curves, the blocks and joints, the weights, the applied loads, the scale, the unit system and the
+        three parameters of the equilibrium state. <strong>Reopen&hellip;</strong> reads it back.
+      </p>
+      <ul>
+        <li>The <strong>background image is not in the file</strong>. Photographs run to megabytes; the
+            file records the image's <em>name</em> and you load it again if you want it.</li>
+        <li>Everything derivable — the force polygon, the thrust line, the joint crossings — is
+            deliberately left out and recomputed on opening, so a file you save today stays readable
+            after the software is corrected.</li>
+        <li>A damaged or foreign file is <strong>refused with a message</strong> rather than half-loaded.</li>
+      </ul>
+      <div class="callout">
+        The file is small and self-contained, which makes it a practical thing to hand in: an exercise can
+        be set as <em>photograph an arch in this city, trace it, and find an admissible line</em>, and the
+        answer is one JSON file.
+      </div>
+    </section>
+
+    <section id="tips">
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>Nothing is drawn.</strong> Check the <em>Show</em> switches, and that blocks were
+            generated after tracing.</li>
+        <li><strong>The arch looks squashed.</strong> It should not: the axes are kept equal. If you have
+            just resized the window and something looks wrong, press <strong>Reset view</strong>.</li>
+        <li><strong>The forces are absurdly large or small.</strong> Almost always the scale or the
+            out-of-plane thickness. Check the reported span first.</li>
+        <li><strong>The two end sliders are disabled.</strong> You are on a stored example, which has no
+            joints for the ends to slide along. Trace an arch instead.</li>
+        <li><strong>&ldquo;Stored solution not recomputable&rdquo;.</strong> The example is one of the six
+            inconsistent ones; the line shown is the one saved with the file.</li>
+        <li><strong>The blocks came out inverted.</strong> The two traced curves cross somewhere. Clear
+            the trace and redo it, watching the springings.</li>
+      </ul>
+    </section>
+
+    <section id="matlab" class="legacy">
+      <h2>The original MATLAB application</h2>
+      <p>
+        The browser application described above supersedes the MATLAB App Designer version, which is kept
+        in the repository for reference and is no longer developed. It requires MATLAB R2019a or later;
+        open <code>aLOTofImaginArches.mlapp</code>, keeping <code>external_functions/</code> on the path,
+        and its examples live in <code>Examples/*.mat</code>.
+      </p>
+      <p>The click-by-click PDF tutorials describe that version:</p>
       <ul>
         <li><a href="Load_Graphics_Units.pdf">Loads, graphics &amp; units</a></li>
         <li><a href="Example_Circular_arch_construction.pdf">Building a circular arch</a></li>
         <li><a href="Example_Sketched_arch_construction.pdf">Building a sketched arch</a></li>
       </ul>
-      <div class="callout">
-        If a browser downloads a PDF instead of opening it inline, save it locally and open it with a PDF reader.
-        The same files are also available in the <code>docs/</code> folder of the
-        <a href="https://github.com/gcastellazzi/aLOTofImaginArches">GitHub repository</a>.
-      </div>
-    </section>
-
-    <section id="tips">
-      <h2>Tips &amp; troubleshooting</h2>
-      <ul>
-        <li>Always <strong>Update data</strong> after moving blocks or changing thickness — weights and LOT depend on updated areas.</li>
-        <li>If the plot looks empty, check <em>Graphics</em> switches (blocks, sketch, background) and click <strong>Plot blocks</strong>.</li>
-        <li>If force arrows are too large or small, adjust <strong>forces factor</strong> or <strong>Force shrink factor</strong>.</li>
-        <li>Use <strong>Clear All Variables</strong> for a full reset; use <strong>Clear Interactive Area</strong> only to remove overlays.</li>
-        <li>For teaching demos, start from a prepared <code>.mat</code> example, then change thrust with the slider live.</li>
-      </ul>
-
-      <h3>Python port</h3>
       <p>
-        A cross-platform desktop port (<strong>pyLOT</strong>) is maintained separately and reads the same
-        <code>Examples/*.mat</code> files. See the
-        <a href="https://github.com/gcastellazzi/pyLOT">pyLOT repository</a>.
+        Its workflow is close enough that they remain useful, but note that the browser version differs in
+        two ways that matter: the ends of the thrust line are <a href="#dof">free</a>, and the unit weight
+        is entered as a <em>weight</em> density rather than a mass density.
       </p>
+      <p>
+        A cross-platform desktop port, <strong>pyLOT</strong>, reads the same <code>.mat</code> files and
+        is likewise no longer developed:
+        <a href="https://github.com/gcastellazzi/pyLOT">github.com/gcastellazzi/pyLOT</a>.
+      </p>
+      <figure>
+        <img src="images/app_screenshot.png" alt="The MATLAB application">
+        <figcaption>The MATLAB App Designer version, whose graphical idiom the browser version keeps.</figcaption>
+      </figure>
     </section>
   </main>
 
   <footer>
     <p>
-      aLOTofImaginArches — open-source educational software.
+      aLOTofImaginArches — open-source educational software, MIT licence.
       Repository:
       <a href="https://github.com/gcastellazzi/aLOTofImaginArches">github.com/gcastellazzi/aLOTofImaginArches</a>.
-      Motto: <em>Ut pendet continuum flexile, sic stabit contiguum rigidum inversum.</em>
+      Developed at DICAM, University of Bologna, for the courses
+      <em>Mechanics of Historical Masonry Structures</em> and
+      <em>Historical Masonry and Wooden Structures</em>.
+    </p>
+    <p>
+      <em>Ut pendet continuum flexile, sic stabit contiguum rigidum inversum.</em>
     </p>
   </footer>
 </body>
