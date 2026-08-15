@@ -88,7 +88,6 @@ extrados at the crown — and four at maximum thrust.
 | `docs/index.html` | the user guide |
 | `tests/` | 121 tests, run by the Node test runner |
 | `tools/mat2json.py` | converts the MATLAB `.mat` examples to JSON, with a `--check` mode that re-verifies every field |
-| `paper/` | the SoftwareX manuscript, with its figures generated from the software itself |
 | `Examples/` | the original MATLAB examples |
 
 Run the tests with:
@@ -130,7 +129,8 @@ usable audit of them:
 - **Bow's notation** on the force polygon and the thrust line together.
 - **Save and reopen**, with the file validated before it is trusted.
 - **Scale, units and applied loads** for traced arches.
-- A **SoftwareX manuscript** describing the software, in `paper/`.
+- A **SoftwareX manuscript** describing the software, kept separately
+  until it is published.
 
 ## The MATLAB and Python versions
 

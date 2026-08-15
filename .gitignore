@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# The manuscript lives outside this repository until it is published.
+paper/
