@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  14 AUG 2026 17:29
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  14 AUG 2026 22:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1238,23 +1238,25 @@ t/fonts/enc/dvips/cm-super/cm-super-t1.enc}
 
 
 ]
-Underfull \hbox (badness 1484) in paragraph at lines 165--168
+Underfull \hbox (badness 1484) in paragraph at lines 164--167
 []\T1/txr/bx/n/10 The legacy ex-am-ples are car-ried over, and
  []
 
 
-Underfull \hbox (badness 7273) in paragraph at lines 224--231
+
+
+Underfull \hbox (badness 7273) in paragraph at lines 200--207
  \T1/txr/m/it/10 Stored ex-am-ples.[] \T1/txr/m/n/10 Twenty-eight ex-am-ple fil
 es are
  []
 
 
 
-
-
 [2]
 
-(./figures/poleni.tex (./figures/data/Poleni_Example_01_meta.tex)
+
+
+[3] (./figures/poleni.tex (./figures/data/Poleni_Example_01_meta.tex)
 PGFPlots: reading {figures/data/Poleni_Example_01_blocks.dat}
 
 NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
@@ -1371,7 +1373,7 @@ NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
 e also unbounded coords=jump). 
 PGFPlots: reading {figures/data/Poleni_Example_01_cable.dat}
 PGFPlots: reading {figures/data/Poleni_Example_01_lot.dat}
-<figures/poleni_plate.jpg, id=20, 1312.905pt x 1606.0pt>
+<figures/poleni_plate.jpg, id=24, 1312.905pt x 1606.0pt>
 File: figures/poleni_plate.jpg Graphic file (type jpg)
 <use figures/poleni_plate.jpg>
 Package pdftex.def Info: figures/poleni_plate.jpg  used on input line 51.
@@ -1492,58 +1494,18 @@ e also unbounded coords=jump).
 NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
 e also unbounded coords=jump). 
 PGFPlots: reading {figures/data/Poleni_Example_01_loadline.dat}
-)
+) (./figures/data/minthick_table.tex)
 
-[3] (./figures/data/minthick_table.tex)
-Underfull \vbox (badness 1142) has occurred while \output is active []
-
-
-
-(./figures/family.tex
-PGFPlots: reading {figures/data/ring_intrados.dat}
-PGFPlots: reading {figures/data/ring_extrados.dat}
-PGFPlots: reading {figures/data/ring_intrados.dat}
-PGFPlots: reading {figures/data/ring_extrados.dat}
-PGFPlots: reading {figures/data/ring_joints.dat}
-
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
-e also unbounded coords=jump). 
-PGFPlots: reading {figures/data/lot_mid.dat}
-PGFPlots: reading {figures/data/lot_free.dat}
-PGFPlots: reading {figures/data/lot_flat.dat}
-Package pgfplots info on input line 42: fill between: activating layered graphi
+(./figures/band.tex
+PGFPlots: reading {figures/data/band_free.dat}
+PGFPlots: reading {figures/data/band_free.dat}
+PGFPlots: reading {figures/data/band_pinned.dat}
+PGFPlots: reading {figures/data/band_pinned.dat}
+PGFPlots: reading {figures/data/band_free.dat}
+PGFPlots: reading {figures/data/band_free.dat}
+PGFPlots: reading {figures/data/band_pinned.dat}
+PGFPlots: reading {figures/data/band_pinned.dat}
+Package pgfplots info on input line 35: fill between: activating layered graphi
 cs
 \pgf@layerbox@axis background=\box74
 \pgf@layerboxsaved@axis background=\box75
@@ -1561,26 +1523,6 @@ cs
 \pgf@layerboxsaved@axis descriptions=\box87
 \pgf@layerbox@axis foreground=\box88
 \pgf@layerboxsaved@axis foreground=\box89
-Package pgfplots info on input line 42: Setting layers 'axis background,axis gr
-id,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis 
-foreground'...
-Package pgfplots info on input line 42: the combination of 'axis on top' and 'a
-ctivate layers' implies 'set layers=axis on top'. Deactivate 'axis on top' if y
-ou want other layers.
-Package pgfplots info on input line 42: Setting layers 'axis background,pre mai
-n,main,axis grid,axis ticks,axis lines,axis tick labels,axis descriptions,axis 
-foreground'...
-) (./figures/band.tex
-PGFPlots: reading {figures/data/band_free.dat}
-PGFPlots: reading {figures/data/band_free.dat}
-PGFPlots: reading {figures/data/band_pinned.dat}
-PGFPlots: reading {figures/data/band_pinned.dat}
-PGFPlots: reading {figures/data/band_free.dat}
-PGFPlots: reading {figures/data/band_free.dat}
-PGFPlots: reading {figures/data/band_pinned.dat}
-PGFPlots: reading {figures/data/band_pinned.dat}
-Package pgfplots info on input line 35: fill between: activating layered graphi
-cs
 Package pgfplots info on input line 35: Setting layers 'axis background,axis gr
 id,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis 
 foreground'...
@@ -1591,41 +1533,121 @@ Package pgfplots info on input line 35: Setting layers 'axis background,pre mai
 n,main,axis grid,axis ticks,axis lines,axis tick labels,axis descriptions,axis 
 foreground'...
 )
+Underfull \hbox (badness 1147) in paragraph at lines 391--399
+\T1/txr/m/n/10 formed --- the two spring-ings, the in-tra-dos at the
+ []
 
-[4 <./figures/poleni_plate.jpg>]
 
 
-Underfull \hbox (badness 6658) in paragraph at lines 445--452
+[4] (./figures/mechanism.tex (./figures/data/mech_meta.tex)
+PGFPlots: reading {figures/data/mech_rest.dat}
+
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+PGFPlots: reading {figures/data/mech_moved.dat}
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+NOTE: coordinate (nan,nan) has been dropped because it is unbounded (in y). (se
+e also unbounded coords=jump). 
+PGFPlots: reading {figures/data/mech_hinges.dat}
+)
+
+
+Underfull \vbox (badness 3547) has occurred while \output is active []
+
+
+
+[5 <./figures/poleni_plate.jpg>]
+Underfull \hbox (badness 1221) in paragraph at lines 460--465
+\T1/txr/m/n/10 rather than from the im-ple-men-ta-tion: the anal-y-sis
+ []
+
+
+Underfull \hbox (badness 6658) in paragraph at lines 470--477
 []\T1/txr/m/it/10 aLOTofImaginArches \T1/txr/m/n/10 makes the three-parameter
  []
 
-(./softwarex.bbl
 
-[5]
+
+(./softwarex.bbl
 Underfull \hbox (badness 3168) in paragraph at lines 29--31
 []\T1/txr/m/n/10 D. O'Dwyer, Fu-nic-u-lar anal-y-sis of ma-sonry
  []
 
 )
 
-
-
-[6
-
-] (./softwarex.aux)
+[6] (./softwarex.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 27298 strings out of 473190
- 691721 string characters out of 5704335
- 1338394 words of memory out of 5000000
- 50026 multiletter control sequences out of 15000+600000
- 610340 words of font info for 126 fonts, out of 8000000 for 9000
+ 27301 strings out of 473190
+ 691875 string characters out of 5704335
+ 1275853 words of memory out of 5000000
+ 50032 multiletter control sequences out of 15000+600000
+ 611995 words of font info for 127 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,16n,105p,726b,2738s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,19n,105p,726b,2740s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/
 txfonts/rtxmi.pfb></opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fon
 ts/type1/public/txfonts/rtxr.pfb></opt/homebrew/Cellar/texlive/20250308_1/share
@@ -1637,7 +1659,7 @@ ype1/public/txfonts/txsy.pfb></opt/homebrew/Cellar/texlive/20250308_1/share/tex
 mf-dist/fonts/type1/urw/times/utmb8a.pfb></opt/homebrew/Cellar/texlive/20250308
 _1/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></opt/homebrew/Cellar/texl
 ive/20250308_1/share/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on softwarex.pdf (6 pages, 428208 bytes).
+Output written on softwarex.pdf (6 pages, 420648 bytes).
 PDF statistics:
  74 PDF objects out of 1000 (max. 8388607)
  46 compressed objects within 1 object stream

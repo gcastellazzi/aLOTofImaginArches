@@ -7,32 +7,35 @@
 \newlabel{tab:metadata}{{1}{2}{}{table.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Software description}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Software architecture}{2}{}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Modules, with their size in lines. The \texttt  {core} modules contain no reference to the browser and are the ones the test suite drives.}}{2}{}\protected@file@percent }
-\newlabel{tab:modules}{{2}{2}{}{table.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Software functionalities}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Stored examples}{2}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Tracing}{2}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scale, units and loads}{2}{}\protected@file@percent }
 \citation{Hooke1676}
 \citation{Poleni1748}
-\citation{Heyman1982,Huerta2006}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces The three parameters that fix the line of thrust.}}{3}{}\protected@file@percent }
-\newlabel{tab:dof}{{3}{3}{}{table.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Scale and units}{3}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Loads}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{The three degrees of freedom}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Admissibility}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mechanism}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Poleni's dome}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Hooke's cable}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Saving}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Illustrative examples}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Reproducing Poleni}{3}{}\protected@file@percent }
 \newlabel{sec:legacy}{{3.1}{3}{}{subsection.3.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The minimum thickness of a semicircular arch}{3}{}\protected@file@percent }
+\citation{Heyman1982,Huerta2006}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Least $t/r_i$ admitting a line of thrust on a semicircular ring, by bisection, against the number of voussoirs $n$. Heyman's value for a continuous ring is $0.108$.}}{4}{}\protected@file@percent }
+\newlabel{tab:minthick}{{2}{4}{}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The minimum thickness of a semicircular arch}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Hinges, and what a degree of freedom does not tell you}{4}{}\protected@file@percent }
+\newlabel{sec:mechanism}{{3.3}{4}{}{subsection.3.3}{}}
 \citation{CastellazziTaliercio2025}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Poleni's plate of 1748 with the model recomputed by the software: 56 voussoirs (grey), the line of thrust (blue) and the inverted Hooke cable (green), with the force polygon on the right. The line is recomputed from the geometry alone and agrees with the solution stored by the MATLAB application to $8.0\times 10^{-16}$ relative.}}{4}{}\protected@file@percent }
-\newlabel{fig:poleni}{{1}{4}{}{figure.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Least $t/r_i$ admitting a line of thrust on a semicircular ring, by bisection, against the number of voussoirs $n$. Heyman's value for a continuous ring is $0.108$.}}{4}{}\protected@file@percent }
-\newlabel{tab:minthick}{{4}{4}{}{table.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Impact}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Poleni's plate of 1748 with the model recomputed by the software: 56 voussoirs (grey), the line of thrust (blue) and the inverted Hooke cable (green), with the force polygon on the right. The line is recomputed from the geometry alone and agrees with the solution stored by the MATLAB application to $8.0\times 10^{-16}$ relative.}}{5}{}\protected@file@percent }
+\newlabel{fig:poleni}{{1}{5}{}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Range of horizontal thrust, as a fraction of the total weight, for which an admissible line exists, against the thickness ratio. Freeing the ends both lowers the thickness at which the band opens and widens it everywhere.}}{5}{}\protected@file@percent }
+\newlabel{fig:band}{{2}{5}{}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Impact}{5}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The minimum-thrust collapse mechanism of a semicircular ring, $t/r_i = 0.18$, $n = 16$, at $H/W = 0.171$: 5{} hinges, 4{} rigid macro-blocks, 2{} degrees of freedom. The displacement is integrated rather than applied as a single rotation, so the blocks stay rigid and every joint opens instead of interpenetrating.}}{5}{}\protected@file@percent }
+\newlabel{fig:mechanism}{{3}{5}{}{figure.3}{}}
 \bibstyle{elsarticle-num}
 \bibdata{refs}
 \bibcite{Kooharian1952}{{1}{}{{}}{{}}}
@@ -40,11 +43,6 @@
 \bibcite{Heyman1982}{{3}{}{{}}{{}}}
 \bibcite{Heyman1995}{{4}{}{{}}{{}}}
 \bibcite{Huerta2001}{{5}{}{{}}{{}}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Three equilibrium states of the same semicircular ring, $t/r_i = 0.15$, $n = 16$. All three are in equilibrium with the weights; only the middle one is admissible. The symmetric line through the joint mid-points (dashed) is the best the pinned construction can offer at that thrust, and it leaves the ring.}}{5}{}\protected@file@percent }
-\newlabel{fig:family}{{2}{5}{}{figure.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Range of horizontal thrust, as a fraction of the total weight, for which an admissible line exists, against the thickness ratio. Freeing the ends both lowers the thickness at which the band opens and widens it everywhere.}}{5}{}\protected@file@percent }
-\newlabel{fig:band}{{3}{5}{}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions}{5}{}\protected@file@percent }
 \bibcite{ODwyer1999}{{6}{}{{}}{{}}}
 \bibcite{Block2006}{{7}{}{{}}{{}}}
 \bibcite{Block2007}{{8}{}{{}}{{}}}
@@ -53,4 +51,5 @@
 \bibcite{Huerta2006}{{11}{}{{}}{{}}}
 \bibcite{CastellazziTaliercio2025}{{12}{}{{}}{{}}}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions}{6}{}\protected@file@percent }
 \gdef \@abspage@last{6}

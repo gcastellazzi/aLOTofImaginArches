@@ -242,6 +242,66 @@ writeFileSync(join(OUT, 'minthick_table.tex'), [
 ].join('\n'));
 log.push('minthick_table.tex');
 
+
+// ------------------------------------------------ the collapse mechanism --
+// The five-hinge minimum-thrust mechanism of a semicircular ring, displaced.
+// Generated rather than drawn, so the figure cannot claim a motion the code
+// does not produce -- including that every joint OPENS.
+import {
+  bestLineForThrust, collapseRange, analyse, displacedConfiguration,
+  displaced as displacedBlocks, transformPoint,
+} from '../../docs/app/js/core/mechanism.js';
+
+{
+  const RI2 = 1;
+  const TRI = 0.18;
+  const N2 = 16;
+  const rr = ring(RI2, RI2 * (1 + TRI), N2);
+  const { blocks, joints } = blocksBetween(arc(RI2), arc(RI2 * (1 + TRI)), N2);
+  // The mechanism module takes the sorted weights and centroids, which the
+  // local `ring` helper calls w and g.
+  const seq = { weights: rr.w, centroids: rr.g };
+
+  const band = collapseRange(seq, joints);
+  const best = bestLineForThrust(seq, joints, band.min);
+  const a = analyse(best.crossings, joints, blocks.length);
+  // Large enough that the mechanism is unmistakable on the page; the joints
+  // still close to a few parts in ten thousand of the span.
+  const T = displacedConfiguration(a.hinges, a.bodies, 0.24);
+  const moved = displacedBlocks(blocks, a.bodyOf, T);
+
+  const path = (polys) => polys.flatMap((p) => [
+    ...p.x.map((x, i) => [x.toFixed(6), p.y[i].toFixed(6)]),
+    [p.x[0].toFixed(6), p.y[0].toFixed(6)],
+    ['nan', 'nan'],
+  ]);
+  log.push(write('mech_rest.dat', 'x y', path(blocks)));
+  log.push(write('mech_moved.dat', 'x y', path(moved)));
+  log.push(write('mech_hinges.dat', 'x y',
+    a.hinges.map((h) => [h.point[0].toFixed(6), h.point[1].toFixed(6)])));
+
+  // Every joint must come apart, and by how much goes in the caption.
+  const gaps = [];
+  for (let k = 1; k + 1 < a.hinges.length; k++) {
+    const h = a.hinges[k];
+    const L = transformPoint(T[k - 1], h.opposite);
+    const R = transformPoint(T[k], h.opposite);
+    gaps.push((R[0] - L[0]) * h.along[0] + (R[1] - L[1]) * h.along[1]);
+  }
+  writeFileSync(join(OUT, 'mech_meta.tex'), [
+    `\\def\\mechHinges{${a.hingeCount}}`,
+    `\\def\\mechBodies{${a.bodyCount}}`,
+    `\\def\\mechDof{${a.dof}}`,
+    `\\def\\mechThrust{${band.min.toFixed(3)}}`,
+    `\\def\\mechPattern{${a.hinges.map((h) => (h.support ? 'S' : h.face[0])).join('')}}`,
+    '',
+  ].join('\n'));
+  log.push(`   mechanism: ${a.hingeCount} hinges, dof ${a.dof}, `
+    + `openings ${gaps.map((v) => v.toFixed(3)).join(' ')}`);
+}
+
+// The summary goes LAST, or the sections written after it are silent -- as
+// the mechanism block was, while its caption claimed the joints all open.
 console.log(log.join('\n'));
 console.log('\nleast admissible t/ri (Heyman, continuous ring: 0.108)');
 rows.forEach(([n, p, f]) => console.log(`  n = ${String(n).padStart(2)}   pinned ${p}   free ${f}`));
