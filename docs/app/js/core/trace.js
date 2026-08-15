@@ -9,7 +9,7 @@
  * Pure functions only. The clicking and the drawing live elsewhere.
  */
 
-import { area, centroid, signedArea } from './geometry.js';
+import { area, centroid, signedArea, blockArea } from './geometry.js';
 
 /** Cumulative arc length along a polyline. Returns [0, ..., total]. */
 export function arcLengths(pts) {
@@ -166,7 +166,9 @@ export function checkTrace(inner, outer, n) {
  * otherwise.
  */
 export function weighBlocks(blocks, { specificWeight = 20, thickness = 1 } = {}) {
-  return blocks.map((p) => area(p) * specificWeight * thickness);
+  // blockArea sums over the pieces, so a voussoir cut from a double shell
+  // weighs what both of its pieces weigh.
+  return blocks.map((b) => blockArea(b) * specificWeight * thickness);
 }
 
 /** Centroids of traced blocks. */

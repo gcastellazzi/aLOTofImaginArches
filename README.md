@@ -49,6 +49,12 @@ reads is exactly the source that runs.
   with them.
 - **Two views** of the right-hand pane: the force polygon, or the voussoirs as
   solids in three dimensions, prismatic or revolved.
+- **Both ends imposed**: fix where the line starts and ends, and see the
+  classical trial-pole construction that gets it there &mdash; exactly, in one
+  correction, not by searching.
+- **Whole profiles**: trace closed outlines instead of two faces, and cut them
+  into voussoirs radially. A cut through a double shell gives blocks in two
+  pieces, weighed as both.
 - **Bow's notation**: dashed rays lettered on the force polygon, with the same
   letter on the parallel segment of the thrust line.
 - **Hooke's cable**, hung from the two springings themselves.
@@ -86,7 +92,7 @@ extrados at the crown — and four at maximum thrust.
 |---|---|
 | `docs/app/` | the application: `js/core/` is the mechanics, `js/render/` the drawing |
 | `docs/index.html` | the user guide |
-| `tests/` | 121 tests, run by the Node test runner |
+| `tests/` | 143 tests, run by the Node test runner |
 | `tools/mat2json.py` | converts the MATLAB `.mat` examples to JSON, with a `--check` mode that re-verifies every field |
 | `Examples/` | the original MATLAB examples |
 
@@ -116,6 +122,8 @@ usable audit of them:
 
 ## Latest developments
 
+- **A three-tab panel** (Geometry, LoT, Mechanism), per-plot view tools, and a
+  3-D block view that turns under the mouse.
 - **Poleni's dome and a 3-D block view**, with the second pane tabbed between
   the force polygon and the solids, as the MATLAB version had it.
 - **Mechanism analysis**: hinge formation from the thrust line, macro-blocks,

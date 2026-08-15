@@ -138,6 +138,64 @@ export function fractionAlongJoint(joint, point) {
 }
 
 /**
+ * The pole that carries the line of thrust from A to B.
+ *
+ * THE CONSTRUCTION THE MATLAB VERSION SHOWED. Choose any trial pole at the
+ * required thrust, draw the funicular from A, and see where it arrives; the
+ * closing error tells you how far the pole's ORDINATE was out, and correcting
+ * it lands the line on B. MATLAB drew this as a preliminary dashed polygon and
+ * a projection of the trial pole onto the vertical through the load line
+ * (`xy_Pole_Prime` to `xy_Pole_Def`), so the student could see the correction
+ * rather than be handed the answer.
+ *
+ * IT IS A CORRECTION, NOT A SEARCH. At a fixed thrust the height the funicular
+ * reaches over B's abscissa is exactly AFFINE in the pole ordinate: each
+ * segment's slope is (yO - s_j)/xO, so the rise summed over the segments is
+ *
+ *     y_end = y_A + (yO (x_B - x_A) - sum s_j dx_j) / xO
+ *
+ * whose derivative in yO is (x_B - x_A)/xO. One trial and one linear step are
+ * therefore exact, and the residual comes out at machine precision -- measured
+ * at 1e-15 over a range of thrusts, with A and B deliberately asymmetric and
+ * off the joints. Anything iterative here would be a misunderstanding.
+ *
+ * @param {number[]} weights     in the sorted order
+ * @param {number[][]} centroids likewise
+ * @param {number[]} A           where the line must start
+ * @param {number[]} B           where it must end
+ * @param {number} thrust        the horizontal thrust, the pole's abscissa
+ * @param {number} [trialOrdinate]  any value; the answer does not depend on it
+ * @returns {{pole, trial, preliminary, closureError, slope}}
+ */
+export function poleForEnds(weights, centroids, A, B, thrust, trialOrdinate) {
+  const xO = Math.abs(thrust);
+  const span = B[0] - A[0];
+  if (!(xO > 0) || span === 0) return null;
+
+  const total = weights.reduce((a, b) => a + b, 0);
+  const trialY = trialOrdinate ?? -total / 2;
+  const trial = [xO, trialY];
+
+  const preliminary = funicular(forcePolygon(weights, trial), centroids, A, B);
+  const reached = preliminary.points[preliminary.points.length - 1];
+
+  // d(y_end)/d(yO), derived above and verified against the numbers.
+  const slope = span / xO;
+  const pole = [xO, trialY + (B[1] - reached[1]) / slope];
+
+  const settled = funicular(forcePolygon(weights, pole), centroids, A, B);
+  const end = settled.points[settled.points.length - 1];
+
+  return {
+    pole,
+    trial,
+    preliminary,
+    slope,
+    closureError: Math.hypot(end[0] - B[0], end[1] - B[1]),
+  };
+}
+
+/**
  * The thrust line with both ends free.
  *
  * funicular() reproduces MATLAB: it starts at a given point and stops on the

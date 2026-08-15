@@ -115,3 +115,44 @@ export function bounds(polys) {
   }
   return { xmin, xmax, ymin, ymax };
 }
+
+/**
+ * A block may be made of several polygons.
+ *
+ * A radial cut through a double shell -- St Peter's inner and outer dome --
+ * passes through masonry, air, and masonry again, so one voussoir is two
+ * disjoint pieces. Blocks therefore may carry a `pieces` array; a block
+ * without one is its own single piece, which is what the tracer has always
+ * produced. Everything downstream reads blocks through these three, so the
+ * distinction stays in one place.
+ */
+export function piecesOf(block) {
+  return block && block.pieces ? block.pieces : [block];
+}
+
+/** The area of a block, summed over its pieces. */
+export function blockArea(block) {
+  return piecesOf(block).reduce((s, p) => s + Math.abs(area(p)), 0);
+}
+
+/**
+ * The centroid of a block, weighted by the area of each piece.
+ *
+ * Taking the first piece alone would put the weight at the wrong radius, and
+ * for a dome that is precisely the quantity the analysis turns on.
+ */
+export function blockCentroid(block) {
+  const pieces = piecesOf(block);
+  let ax = 0;
+  let ay = 0;
+  let total = 0;
+  for (const p of pieces) {
+    const a = Math.abs(area(p));
+    const g = centroid(p);
+    ax += g[0] * a;
+    ay += g[1] * a;
+    total += a;
+  }
+  if (!(total > 0)) return centroid(pieces[0]);
+  return [ax / total, ay / total];
+}

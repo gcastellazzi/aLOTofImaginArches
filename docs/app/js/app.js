@@ -10,11 +10,12 @@ import {
   drawBlocks, drawThrustLine, drawCable, drawWeights, drawSupports,
   drawForcePolygon, drawArrow, drawThrustLabels, labelStride,
   drawHinges, drawMacroBlocks, drawMechanism, drawCentres,
+  drawEnds, drawPreliminary,
 } from './render/draw.js';
 import { bounds, area as signedAreaOf } from './core/geometry.js';
 import {
   forcePolygon, funicular, poleFromForcePolygon, hangingCable, jointCrossings,
-  freeThrustLine,
+  freeThrustLine, poleForEnds,
 } from './core/statics.js';
 import { fromExample, poleOf, consistency } from './core/model.js';
 import {
@@ -32,6 +33,7 @@ import {
 import {
   defaultAxis, luneWeights, solids, widthRange,
 } from './core/dome.js';
+import { cutRadially, blockCentroid, blockArea } from './core/profile.js';
 import {
   frame, projectedBounds, drawSolids, drawAxis,
 } from './render/solid.js';
@@ -57,6 +59,17 @@ const ui = {
   pickAxis: el('pickAxis'), domeStatus: el('domeStatus'),
   tabForce: el('tabForce'), tabSolid: el('tabSolid'),
   sideCaption: el('sideCaption'),
+  tabGeom: el('tabGeom'), tabLot: el('tabLot'), tabMech: el('tabMech'),
+  paneGeom: el('paneGeom'), paneLot: el('paneLot'), paneMech: el('paneMech'),
+  thrustM: el('thrustM'), thrustValueM: el('thrustValueM'),
+  showCable2: el('showCable2'), cableWeights: el('cableWeights'),
+  imposeEnds: el('imposeEnds'), pickA: el('pickA'), pickB: el('pickB'),
+  endsStatus: el('endsStatus'),
+  imposeEnds2: el('imposeEnds2'), pickA2: el('pickA2'), pickB2: el('pickB2'),
+  traceProfile: el('traceProfile'), clearProfiles: el('clearProfiles'),
+  pickCutCentre: el('pickCutCentre'), nCuts: el('nCuts'),
+  cutProfile: el('cutProfile'), profileStatus: el('profileStatus'),
+  nSides: el('nSides'), addBlock: el('addBlock'),
   showJoints: el('showJoints'), admissible: el('admissible'),
   flipY: el('flipY'),
   imageFile: el('imageFile'), traceInner: el('traceInner'),
@@ -89,6 +102,13 @@ const state = {
   basePole: null,   // the pole as saved: thrust slider is relative to it
   mech: null,       // the hinge analysis, when the mechanism tab is driving
   band: null,       // the two collapse thrusts, once computed
+  camera: { az: -45, el: 30 },   // the 3-D viewpoint, in degrees
+  ends: { A: null, B: null, picking: null, construction: null },
+  // Whole-profile tracing: closed outlines, the centre the cuts radiate from,
+  // and the free-hand block being drawn.
+  profiles: { list: [], current: null, centre: null, picking: false },
+  newBlock: null,
+  solidBounds: null,             // its projected extent, for the fit buttons
   bandKey: null,    // what the band was computed for
   pole: null,
   fp: null,
@@ -288,6 +308,40 @@ function reportMechanism(thrustFraction) {
   }
 }
 
+/** Say where the ends are and how well the construction closed. */
+function reportImposed(got) {
+  const m = state.model;
+  const scaled = m.frame && m.frame.coordinates === 'physical';
+  const at = (p) => `(${p[0].toPrecision(4)}, ${p[1].toPrecision(4)})`;
+  const err = got
+    ? (got.closureError < 1e-9
+      ? 'closes to machine precision'
+      : `closes to ${got.closureError.toPrecision(2)}`)
+    : '';
+  ui.endsStatus.textContent = state.ends.A && state.ends.B
+    ? `A ${at(state.ends.A)} · B ${at(state.ends.B)}`
+      + (ui.imposeEnds.checked ? ` · ${err}` : ' · not imposed')
+    : 'not set — the ends follow the joints';
+  if (scaled) { /* the coordinates already carry the physical frame */ }
+}
+
+/** Arm a click on the arch to place one of the two ends. */
+function armEnd(which) {
+  state.ends.picking = state.ends.picking === which ? null : which;
+  if (state.ends.picking) {
+    if (state.trace.armed) finishTrace();
+    if (state.ref.picking) armReference();
+    if (state.pickingAxis) ui.pickAxis.click();
+  }
+  for (const [w, ...btns] of [['A', ui.pickA, ui.pickA2], ['B', ui.pickB, ui.pickB2]]) {
+    for (const b of btns) {
+      b.classList.toggle('armed', state.ends.picking === w);
+      b.textContent = state.ends.picking === w ? 'Click on the arch…' : `Pick ${w}`;
+    }
+  }
+  draw();
+}
+
 /** Where the thrust slider must sit to ask for a given thrust fraction. */
 function sliderForThrust(f) {
   const band = state.band;
@@ -392,6 +446,33 @@ function recompute() {
   }
   state.mech = null;
 
+  // BOTH ENDS IMPOSED. The thrust stays the student's; the pole's ordinate is
+  // whatever carries the line from A to B, found by one trial and one exact
+  // correction. The other two sliders become readouts, as in mechanism mode.
+  if (state.ends.A && state.ends.B && ui.imposeEnds.checked) {
+    const [P, Q] = state.ends.A[0] >= state.ends.B[0]
+      ? [state.ends.A, state.ends.B] : [state.ends.B, state.ends.A];
+    // The TRIAL is the pole the sliders are currently asking for. That makes
+    // the construction responsive: moving the reaction slider moves O' and
+    // stretches the correction, while O stays exactly where it was -- which is
+    // the property worth seeing, and the one the tests assert.
+    const got = poleForEnds(seq.weights, seq.centroids, P, Q, pole[0], pole[1]);
+    if (got) {
+      state.pole = got.pole;
+      state.fp = forcePolygon(seq.weights, got.pole);
+      state.lot = funicular(state.fp, seq.centroids, P, Q);
+      state.ends.construction = got;
+      state.startFraction = null;
+      state.endFraction = null;
+      state.segForces = state.fp.magnitudes.map((r) => r[2]);
+      assessAdmissibility();
+      reportEnds(null);
+      reportImposed(got);
+      return;
+    }
+  }
+  state.ends.construction = null;
+
   state.fp = forcePolygon(seq.weights, pole);
   if (ends) {
     // BOTH ENDS FREE. The line starts at a chosen fraction of one springing
@@ -416,10 +497,11 @@ function recompute() {
   reportEnds(ends);
 
   const scaled = m.frame && m.frame.coordinates === 'physical';
-  ui.thrustValue.textContent =
-    `H = ${scaled ? format(state.fp.thrust, 'force', state.system)
-      : `${state.fp.thrust.toPrecision(4)} (unscaled)`}` +
-    `  ·  ×${factor.toFixed(2)} of the reference pole`;
+  const reading = `H = ${scaled ? format(state.fp.thrust, 'force', state.system)
+    : `${state.fp.thrust.toPrecision(4)} (unscaled)`}`
+    + `  ·  ×${factor.toFixed(2)} of the reference pole`;
+  ui.thrustValue.textContent = reading;
+  ui.thrustValueM.textContent = reading;
 }
 
 /**
@@ -564,7 +646,10 @@ function draw() {
     // used to, left the cable floating clear of the springings on any arch
     // that was not symmetric -- which is exactly when the analogy is worth
     // looking at.
-    drawCable(mainAx, hangingCable(state.lot.points));
+    drawCable(mainAx, hangingCable(state.lot.points), {
+      weights: state.seq ? state.seq.weights : null,
+      weightScale: (Number(ui.cableWeights.value) / 100) * 40,
+    });
   }
   if (ui.showMech.checked && state.mech) {
     const a = state.mech;
@@ -576,9 +661,14 @@ function draw() {
     }
     drawHinges(mainAx, a.hinges);
   }
+  if (state.ends.construction) {
+    drawPreliminary(mainAx, state.ends.construction.preliminary.points);
+  }
+  if (state.ends.A || state.ends.B) drawEnds(mainAx, state.ends.A, state.ends.B);
   drawSupports(mainAx, m.pointA, m.pointB);
   if (ui.showJoints.checked) drawJoints();
   drawTrace();
+  drawProfiles();
   drawForces();
   drawReference();
   mainAx.decorate();
@@ -593,6 +683,7 @@ function draw() {
     drawForcePolygon(forceAx, state.fp, {
       rayLabels: ui.showRays.checked,
       stride: raysStride(),
+      construction: state.ends.construction,
     });
   }
   forceAx.decorate();
@@ -891,6 +982,160 @@ function reportTrace() {
   }
 }
 
+// ------------------------------------------------- whole profiles --
+
+function reportProfiles() {
+  const p = state.profiles;
+  const n = p.list.length + (p.current && p.current.length >= 3 ? 1 : 0);
+  const ready = n > 0 && p.centre;
+  ui.cutProfile.disabled = !ready;
+  ui.profileStatus.textContent = !n
+    ? 'no outline traced'
+    : `${n} outline${n === 1 ? '' : 's'}`
+      + (p.centre
+        ? ` · centre at (${p.centre[0].toPrecision(4)}, ${p.centre[1].toPrecision(4)})`
+        : ' · pick the centre of the cuts');
+}
+
+/** Start, or finish, a closed outline. */
+function armProfile() {
+  const p = state.profiles;
+  if (p.current) {
+    if (p.current.length >= 3) p.list.push(p.current);
+    p.current = null;
+  } else {
+    if (state.trace.armed) finishTrace();
+    p.current = [];
+  }
+  ui.traceProfile.classList.toggle('armed', !!p.current);
+  ui.traceProfile.textContent = p.current
+    ? 'Close this outline' : 'Trace an outline';
+  reportProfiles();
+  draw();
+}
+
+/** Turn the traced outlines into voussoirs by cutting them radially. */
+function cutProfiles() {
+  const p = state.profiles;
+  if (p.current && p.current.length >= 3) armProfile();      // close it first
+  const n = Math.max(1, Number(ui.nCuts.value) || 16);
+  const { blocks, joints, warnings } = cutRadially(p.list, p.centre, n);
+  if (!blocks.length) {
+    ui.warn.hidden = false;
+    ui.warn.textContent = warnings.join('; ') || 'nothing to cut';
+    return;
+  }
+
+  const centroids = blocks.map(blockCentroid);
+  const ends = joints.length >= 2
+    ? [joints[0], joints[joints.length - 1]].map((j) => [
+      (j.a[0] + j.b[0]) / 2, (j.a[1] + j.b[1]) / 2,
+    ])
+    : [null, null];
+  const [e0, e1] = ends;
+  state.model = {
+    ...state.model,
+    blocks, joints, centroids,
+    areas: blocks.map((b) => blockArea(b)),
+    pointA: e0 && e1 ? (e0[0] <= e1[0] ? e0 : e1) : null,
+    pointB: e0 && e1 ? (e0[0] <= e1[0] ? e1 : e0) : null,
+    forcePolygon: null, thrustLine: null,
+    units: null,
+    frame: { coordinates: 'pixels', units_per_pixel: 1, inferred: false },
+  };
+  state.consistent = { ok: true, reason: null, extraRows: 0 };
+  if (!state.axisPicked) resetAxis();
+  reweigh();
+  state.band = null; state.bandKey = null; state.solidFit = null;
+
+  ui.warn.hidden = !warnings.length;
+  if (warnings.length) ui.warn.textContent = warnings.join('; ') + '.';
+  reportProfiles();
+  recompute();
+  fitViews();
+  draw();
+}
+
+/** Arm the free-hand block tool. */
+function armBlock() {
+  state.newBlock = state.newBlock ? null : [];
+  ui.addBlock.classList.toggle('armed', !!state.newBlock);
+  ui.addBlock.textContent = state.newBlock ? 'Click the corners…' : 'Draw a block';
+  draw();
+}
+
+/** Add the block just drawn to the model and re-weigh. */
+function commitBlock() {
+  const pts = state.newBlock;
+  const m = state.model;
+  const poly = { x: pts.map((p) => p[0]), y: pts.map((p) => p[1]) };
+  if (signedAreaOf(poly) < 0) { poly.x.reverse(); poly.y.reverse(); }
+  m.blocks = [...(m.blocks ?? []), poly];
+  m.centroids = m.blocks.map(blockCentroid);
+  m.areas = m.blocks.map((b) => blockArea(b));
+  // armBlock is a TOGGLE: clearing the state first and then calling it would
+  // arm the tool again instead of putting it away.
+  armBlock();
+  reweigh();
+  state.band = null; state.bandKey = null; state.solidFit = null;
+  recompute();
+  draw();
+}
+
+/** The outlines, the centre of the cuts, and the block being drawn. */
+function drawProfiles() {
+  const p = state.profiles;
+  const live = p.current && p.current.length ? [p.current] : [];
+  const all = [...p.list, ...live];
+  if (!all.length && !p.centre && !state.newBlock) return;
+
+  mainAx.clipped((c) => {
+    c.lineWidth = 1.6;
+    all.forEach((prof, i) => {
+      if (prof.length < 2) return;
+      c.beginPath();
+      prof.forEach((q, k) => {
+        const [X, Y] = mainAx.toPx(q);
+        if (k === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+      });
+      // A closed outline is shown closed; the one being drawn is not.
+      const closing = i < p.list.length;
+      if (closing) c.closePath();
+      c.strokeStyle = closing ? '#7d3c98' : '#c0392b';
+      c.setLineDash(closing ? [] : [5, 3]);
+      c.stroke();
+      c.setLineDash([]);
+    });
+
+    if (state.newBlock && state.newBlock.length) {
+      c.beginPath();
+      state.newBlock.forEach((q, k) => {
+        const [X, Y] = mainAx.toPx(q);
+        if (k === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+      });
+      c.strokeStyle = '#c0392b';
+      c.setLineDash([4, 3]);
+      c.stroke();
+      c.setLineDash([]);
+      for (const q of state.newBlock) {
+        const [X, Y] = mainAx.toPx(q);
+        c.beginPath(); c.arc(X, Y, 3, 0, 2 * Math.PI);
+        c.fillStyle = '#c0392b'; c.fill();
+      }
+    }
+
+    if (p.centre) {
+      const [X, Y] = mainAx.toPx(p.centre);
+      c.strokeStyle = '#7d3c98';
+      c.lineWidth = 1.4;
+      c.beginPath();
+      c.moveTo(X - 7, Y); c.lineTo(X + 7, Y);
+      c.moveTo(X, Y - 7); c.lineTo(X, Y + 7);
+      c.stroke();
+    }
+  });
+}
+
 /** Which of the two views the right-hand pane is showing. */
 function sideView() {
   return ui.tabSolid.classList.contains('active') ? 'solid' : 'force';
@@ -913,7 +1158,7 @@ function drawSolidView() {
     return;
   }
   const dome = domeOptions();
-  const f = frame(-45 - (dome.poleni ? dome.angleDeg / 2 : 0), 30);
+  const f = frame(state.camera.az, state.camera.el);
   const list = solids(m.blocks, {
     poleni: dome.poleni,
     axisX: dome.axisX,
@@ -922,9 +1167,12 @@ function drawSolidView() {
     steps: dome.poleni ? Math.max(2, Math.round(dome.angleDeg / 4)) : 1,
   });
 
-  if (state.solidFit !== sideKey()) {
-    const b = projectedBounds(list, f);
-    if (b) solidAx.fit(b);
+  // The projected extent moves with the camera, so it is recomputed every
+  // frame and kept for the fit buttons; the view is only re-framed when the
+  // SUBJECT changes, or turning the solid would fight the user's zoom.
+  state.solidBounds = projectedBounds(list, f);
+  if (state.solidFit !== sideKey() && state.solidBounds) {
+    solidAx.fit(state.solidBounds);
     state.solidFit = sideKey();
   }
   solidAx.reequalize();
@@ -953,6 +1201,7 @@ function sideKey() {
   const d = domeOptions();
   return `${m && m.blocks ? m.blocks.length : 0}:${d.poleni}:`
     + `${d.angleDeg}:${d.axisX}:${m && m.frame ? m.frame.units_per_pixel : 1}`;
+  // NOTE: deliberately NOT the camera. Turning the solid must not re-frame it.
 }
 
 /** The macro-block colours, as triples, to tint the solids with. */
@@ -1115,6 +1364,38 @@ function attachNavigation(ax) {
       armForce();
       return;
     }
+    if (ax === mainAx && state.profiles.current) {
+      state.profiles.current.push(mainAx.toData([e.offsetX, e.offsetY]));
+      reportProfiles();
+      draw();
+      return;
+    }
+    if (ax === mainAx && state.profiles.picking) {
+      state.profiles.centre = mainAx.toData([e.offsetX, e.offsetY]);
+      state.profiles.picking = false;
+      ui.pickCutCentre.classList.remove('armed');
+      ui.pickCutCentre.textContent = 'Pick the centre of the cuts';
+      reportProfiles();
+      draw();
+      return;
+    }
+    if (ax === mainAx && state.newBlock) {
+      state.newBlock.push(mainAx.toData([e.offsetX, e.offsetY]));
+      if (state.newBlock.length >= Math.max(3, Number(ui.nSides.value) || 4)) {
+        commitBlock();
+      } else {
+        draw();
+      }
+      return;
+    }
+    if (ax === mainAx && state.ends.picking) {
+      state.ends[state.ends.picking] = mainAx.toData([e.offsetX, e.offsetY]);
+      armEnd(state.ends.picking);          // disarms
+      recompute();
+      fitForceView();
+      draw();
+      return;
+    }
     if (ax === mainAx && state.pickingAxis) {
       // Only the abscissa matters: the axis of a dome is vertical.
       ui.domeAxis.value = mainAx.toData([e.offsetX, e.offsetY])[0].toPrecision(6);
@@ -1157,7 +1438,17 @@ function attachNavigation(ax) {
       return;
     }
     if (!dragging) return;
-    ax.pan(e.offsetX - last[0], e.offsetY - last[1]);
+    const dx = e.offsetX - last[0];
+    const dy = e.offsetY - last[1];
+    if (ax === solidAx && !e.shiftKey) {
+      // A three-dimensional view turns under the drag; panning it takes shift.
+      // Elevation is clamped short of the poles, where the azimuth stops
+      // meaning anything and the picture flips.
+      state.camera.az -= dx * 0.5;
+      state.camera.el = Math.max(-89, Math.min(89, state.camera.el + dy * 0.5));
+    } else {
+      ax.pan(dx, dy);
+    }
     last = [e.offsetX, e.offsetY];
     draw();
   });
@@ -1273,6 +1564,124 @@ for (const k of ['startPos', 'split']) {
     draw();
   });
 }
+// ------------------------------------------------------------ view tools --
+
+/** What the given axes is currently a picture of, in data coordinates. */
+function contentBounds(ax) {
+  const m = state.model;
+  if (ax === mainAx) {
+    let b = bounds(m && m.blocks && m.blocks.length ? m.blocks : []);
+    if (!isFinite(b.xmin)) return null;
+    if (m.frame && m.frame.coordinates === 'pixels' && m.imageSize) {
+      b = {
+        xmin: Math.min(b.xmin, 0), xmax: Math.max(b.xmax, m.imageSize[0]),
+        ymin: Math.min(b.ymin, 0), ymax: Math.max(b.ymax, m.imageSize[1]),
+      };
+    }
+    return b;
+  }
+  if (ax === forceAx) {
+    if (!state.fp) return null;
+    const xs = [0, state.fp.pole[0]];
+    const ys = [...state.fp.stations, state.fp.pole[1]];
+    return {
+      xmin: Math.min(...xs), xmax: Math.max(...xs),
+      ymin: Math.min(...ys), ymax: Math.max(...ys),
+    };
+  }
+  // The solid view: the bounds of the projection, which move with the camera.
+  return state.solidBounds ?? null;
+}
+
+/** Fit, fit-width, fit-height, zoom, on whichever plot the buttons belong to. */
+function viewAction(ax, act) {
+  ax.syncSize();
+  if (act === 'in' || act === 'out') {
+    // zoomAt takes CSS PIXELS, not data coordinates: zoom about the middle of
+    // the drawing area, which is the centre of the box and not of the canvas.
+    const b = ax.box;
+    ax.zoomAt([b.x + b.w / 2, b.y + b.h / 2], act === 'in' ? 1 / 1.25 : 1.25);
+  } else {
+    const b = contentBounds(ax);
+    if (!b) return;
+    ax.fit(b, 0.06, act === 'fitx' ? 'x' : act === 'fity' ? 'y' : null);
+  }
+  draw();
+}
+
+for (const row of document.querySelectorAll('.viewtools[data-ax]')) {
+  row.addEventListener('click', (e) => {
+    const act = e.target.dataset.act;
+    if (!act) return;
+    const which = row.dataset.ax;
+    viewAction(which === 'main' ? mainAx
+      : sideView() === 'solid' ? solidAx : forceAx, act);
+  });
+}
+
+el('solidTools').addEventListener('click', (e) => {
+  const which = e.target.dataset.view3d;
+  if (!which) return;
+  state.camera = which === 'front'
+    ? { az: -90, el: 0 }              // straight at the meridian plane
+    : { az: -45, el: 30 };            // the three-quarter view MATLAB used
+  state.solidFit = null;
+  draw();
+});
+
+// -------------------------------------------------- the panel's three tabs --
+
+function showPanel(which) {
+  for (const [name, tab, pane] of [
+    ['geom', ui.tabGeom, ui.paneGeom],
+    ['lot', ui.tabLot, ui.paneLot],
+    ['mech', ui.tabMech, ui.paneMech],
+  ]) {
+    const on = name === which;
+    tab.classList.toggle('active', on);
+    pane.hidden = !on;
+  }
+  el('panel').scrollTop = 0;
+}
+ui.tabGeom.addEventListener('click', () => showPanel('geom'));
+ui.tabLot.addEventListener('click', () => showPanel('lot'));
+ui.tabMech.addEventListener('click', () => showPanel('mech'));
+
+/**
+ * Keep a duplicated control in step with the one the application listens to.
+ *
+ * Some controls appear in two tabs -- the thrust slider drives the mechanism
+ * as much as the thrust line -- and a value must not live in two places. The
+ * PRIMARY element stays the one `ui` refers to and every handler is attached
+ * to; the clone writes into it and re-dispatches, so nothing else in the
+ * application has to know the clone exists. The guard stops the echo: without
+ * it each element would answer the other for ever.
+ */
+function mirror(primary, clone, event = 'input') {
+  if (!primary || !clone) return;
+  let echoing = false;
+  const copy = (from, to) => {
+    if (echoing) return;
+    echoing = true;
+    if (to.type === 'checkbox') to.checked = from.checked;
+    else to.value = from.value;
+    to.dispatchEvent(new Event(event, { bubbles: false }));
+    echoing = false;
+  };
+  clone.addEventListener(event, () => copy(clone, primary));
+  primary.addEventListener(event, () => copy(primary, clone));
+}
+mirror(ui.thrust, ui.thrustM, 'input');
+mirror(ui.imposeEnds, ui.imposeEnds2, 'change');
+for (const b of [ui.pickA, ui.pickA2]) b.addEventListener('click', () => armEnd('A'));
+for (const b of [ui.pickB, ui.pickB2]) b.addEventListener('click', () => armEnd('B'));
+ui.imposeEnds.addEventListener('change', () => {
+  recompute();
+  fitForceView();
+  draw();
+});
+mirror(ui.showCable, ui.showCable2, 'change');
+
 // ------------------------------------------------- the two side views --
 
 function showSide(which) {
@@ -1281,6 +1690,7 @@ function showSide(which) {
   ui.tabForce.classList.toggle('active', !solid);
   el('solid').hidden = !solid;
   el('force').hidden = solid;
+  el('solidTools').hidden = !solid;
   ui.sideCaption.textContent = solid
     ? (ui.poleni.checked ? 'Blocks — dome lune' : 'Blocks — constant thickness')
     : 'Force polygon';
@@ -1349,6 +1759,26 @@ ui.mechOn.addEventListener('change', () => {
   draw();
 });
 ui.mechAmp.addEventListener('input', draw);
+ui.traceProfile.addEventListener('click', armProfile);
+ui.clearProfiles.addEventListener('click', () => {
+  state.profiles.list = [];
+  state.profiles.current = null;
+  ui.traceProfile.classList.remove('armed');
+  ui.traceProfile.textContent = 'Trace an outline';
+  reportProfiles();
+  draw();
+});
+ui.pickCutCentre.addEventListener('click', () => {
+  state.profiles.picking = !state.profiles.picking;
+  if (state.profiles.picking && state.profiles.current) armProfile();
+  ui.pickCutCentre.classList.toggle('armed', state.profiles.picking);
+  ui.pickCutCentre.textContent = state.profiles.picking
+    ? 'Click the centre…' : 'Pick the centre of the cuts';
+  draw();
+});
+ui.cutProfile.addEventListener('click', cutProfiles);
+ui.addBlock.addEventListener('click', armBlock);
+ui.cableWeights.addEventListener('input', draw);
 for (const [b, pick] of [[ui.goHmin, (x) => x.min], [ui.goHmax, (x) => x.max]]) {
   b.addEventListener('click', () => {
     if (!state.band) return;

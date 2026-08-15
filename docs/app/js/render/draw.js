@@ -12,6 +12,7 @@
  */
 
 import { COLOR_ORDER } from './axes.js';
+import { piecesOf } from '../core/geometry.js';
 
 /** A deterministic light brick colour, so a block keeps its colour on redraw. */
 export function brickColour(index) {
@@ -30,18 +31,20 @@ function hslToCss(h, s, l) {
 export function drawBlocks(ax, polys, opt = {}) {
   const { labels = false, highlight = -1 } = opt;
   ax.clipped((c) => {
-    polys.forEach((p, k) => {
-      c.beginPath();
-      for (let i = 0; i < p.x.length; i++) {
-        const [X, Y] = ax.toPx([p.x[i], p.y[i]]);
-        if (i === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+    polys.forEach((block, k) => {
+      for (const p of piecesOf(block)) {
+        c.beginPath();
+        for (let i = 0; i < p.x.length; i++) {
+          const [X, Y] = ax.toPx([p.x[i], p.y[i]]);
+          if (i === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+        }
+        c.closePath();
+        c.fillStyle = k === highlight ? '#ffd27f' : brickColour(k);
+        c.fill();
+        c.strokeStyle = 'rgba(40,40,40,0.75)';
+        c.lineWidth = k === highlight ? 1.6 : 0.8;
+        c.stroke();
       }
-      c.closePath();
-      c.fillStyle = k === highlight ? '#ffd27f' : brickColour(k);
-      c.fill();
-      c.strokeStyle = 'rgba(40,40,40,0.75)';
-      c.lineWidth = k === highlight ? 1.6 : 0.8;
-      c.stroke();
     });
     if (labels) {
       c.fillStyle = '#333';
@@ -105,8 +108,16 @@ export function drawThrustLine(ax, points, forces, opt = {}) {
 }
 
 /** Hooke's cable, drawn as the mirror of the thrust line. */
+/**
+ * Hooke's cable, with the weights it carries.
+ *
+ * `weights` draws a disc at each vertex whose AREA is proportional to the
+ * weight there -- area, not radius, because that is what the eye compares.
+ * On a dome lune the springing discs dwarf the crown ones, which is the taper
+ * of the lune made visible on the arch itself.
+ */
 export function drawCable(ax, points, opt = {}) {
-  const { colour = COLOR_ORDER[0] } = opt;
+  const { colour = COLOR_ORDER[0], weights = null, weightScale = 0 } = opt;
   if (!points || points.length < 2) return;
   ax.clipped((c) => {
     c.beginPath();
@@ -124,6 +135,27 @@ export function drawCable(ax, points, opt = {}) {
       c.arc(X, Y, 2.5, 0, 2 * Math.PI);
       c.fill();
     });
+
+    if (weights && weightScale > 0) {
+      const peak = Math.max(...weights.map(Math.abs), 0);
+      if (peak > 0) {
+        c.lineWidth = 1;
+        c.strokeStyle = colour;
+        c.fillStyle = 'rgba(0,114,189,0.16)';
+        weights.forEach((w, i) => {
+          // The cable has one more vertex than there are weights: the load at
+          // a station sits on the vertex that follows it.
+          const p = points[i + 1] ?? points[points.length - 1];
+          const [X, Y] = ax.toPx(p);
+          const r = weightScale * Math.sqrt(Math.abs(w) / peak);
+          if (!(r > 0.5)) return;
+          c.beginPath();
+          c.arc(X, Y, r, 0, 2 * Math.PI);
+          c.fill();
+          c.stroke();
+        });
+      }
+    }
   });
 }
 
@@ -237,7 +269,9 @@ export function labelStride(count, most = 18) {
 }
 
 export function drawForcePolygon(ax, fp, opt = {}) {
-  const { labels = true, rayLabels = false, stride = 1 } = opt;
+  const {
+    labels = true, rayLabels = false, stride = 1, construction = null,
+  } = opt;
   const { stations, pole } = fp;
   const c = ax.ctx;
 
@@ -295,6 +329,75 @@ export function drawForcePolygon(ax, fp, opt = {}) {
       c.textBaseline = 'middle';
       c.fillText('O', px + 7, py);
     }
+
+    // THE CORRECTION, SHOWN. A trial pole at the same thrust, and the step
+    // down the vertical that carries the line onto B. The student should see
+    // that the thrust is not what changed.
+    if (construction && construction.trial) {
+      const [tx, ty] = ax.toPx(construction.trial);
+      c.setLineDash([4, 3]);
+      c.strokeStyle = '#A2142F';
+      c.lineWidth = 1.4;
+      c.beginPath();
+      c.moveTo(tx, ty);
+      c.lineTo(px, py);
+      c.stroke();
+      c.setLineDash([]);
+
+      c.beginPath();
+      c.arc(tx, ty, 3, 0, 2 * Math.PI);
+      c.fillStyle = '#fff';
+      c.fill();
+      c.lineWidth = 1.6;
+      c.strokeStyle = '#A2142F';
+      c.stroke();
+      if (labels) {
+        c.fillStyle = '#A2142F';
+        c.font = 'bold 12px Helvetica, Arial, sans-serif';
+        c.fillText("O'", tx + 7, ty);
+      }
+    }
+  });
+}
+
+/** The two imposed ends, marked and lettered on the arch. */
+export function drawEnds(ax, A, B, opt = {}) {
+  const { colour = '#7d3c98' } = opt;
+  ax.clipped((c) => {
+    c.font = 'bold 12px Helvetica, Arial, sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    for (const [p, name] of [[A, 'A'], [B, 'B']]) {
+      if (!p) continue;
+      const [X, Y] = ax.toPx(p);
+      c.beginPath();
+      c.arc(X, Y, 5, 0, 2 * Math.PI);
+      c.fillStyle = colour;
+      c.fill();
+      c.lineWidth = 3;
+      c.strokeStyle = 'rgba(255,255,255,0.9)';
+      c.strokeText(name, X, Y - 13);
+      c.fillStyle = colour;
+      c.fillText(name, X, Y - 13);
+    }
+  });
+}
+
+/** The preliminary funicular: where the trial pole would have taken the line. */
+export function drawPreliminary(ax, points, opt = {}) {
+  const { colour = 'rgba(120,120,120,0.9)' } = opt;
+  if (!points || points.length < 2) return;
+  ax.clipped((c) => {
+    c.setLineDash([6, 4]);
+    c.strokeStyle = colour;
+    c.lineWidth = 1.2;
+    c.beginPath();
+    points.forEach((p, i) => {
+      const [X, Y] = ax.toPx(p);
+      if (i === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+    });
+    c.stroke();
+    c.setLineDash([]);
   });
 }
 
@@ -385,19 +488,21 @@ export const BODY_COLOURS = [
  */
 export function drawMacroBlocks(ax, polys, bodyOf) {
   ax.clipped((c) => {
-    polys.forEach((p, k) => {
+    polys.forEach((block, k) => {
       const b = bodyOf[k];
-      c.beginPath();
-      for (let i = 0; i < p.x.length; i++) {
-        const [X, Y] = ax.toPx([p.x[i], p.y[i]]);
-        if (i === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+      for (const p of piecesOf(block)) {
+        c.beginPath();
+        for (let i = 0; i < p.x.length; i++) {
+          const [X, Y] = ax.toPx([p.x[i], p.y[i]]);
+          if (i === 0) c.moveTo(X, Y); else c.lineTo(X, Y);
+        }
+        c.closePath();
+        c.fillStyle = b < 0 ? '#e8e8e8' : BODY_COLOURS[b % BODY_COLOURS.length];
+        c.fill();
+        c.strokeStyle = 'rgba(40,40,40,0.6)';
+        c.lineWidth = 0.8;
+        c.stroke();
       }
-      c.closePath();
-      c.fillStyle = b < 0 ? '#e8e8e8' : BODY_COLOURS[b % BODY_COLOURS.length];
-      c.fill();
-      c.strokeStyle = 'rgba(40,40,40,0.6)';
-      c.lineWidth = 0.8;
-      c.stroke();
     });
   });
 }

@@ -82,7 +82,17 @@ export class Axes {
   }
 
   /** Set the view to these data bounds, with a margin, honouring `equal`. */
-  fit(bounds, pad = 0.06) {
+  /**
+   * Frame the given bounds.
+   *
+   * `only` picks which extent decides the scale when the axes are equal:
+   * omitted, both are honoured and the content is letterboxed; 'x' fills the
+   * width and lets the height fall where it may; 'y' the reverse. It is the
+   * difference between "fit" and "fit width" as a drawing program means them,
+   * and it cannot be had by scaling the bounds because equal scales couple the
+   * two directions.
+   */
+  fit(bounds, pad = 0.06, only = null) {
     let { xmin, xmax, ymin, ymax } = bounds;
     if (!(isFinite(xmin) && isFinite(xmax))) return;
     let dx = xmax - xmin || 1;
@@ -96,7 +106,7 @@ export class Axes {
       dy = ymax - ymin;
       const sx = b.w / dx;
       const sy = b.h / dy;
-      const s = Math.min(sx, sy);
+      const s = only === 'x' ? sx : only === 'y' ? sy : Math.min(sx, sy);
       const cx = (xmin + xmax) / 2;
       const cy = (ymin + ymax) / 2;
       const halfW = b.w / s / 2;

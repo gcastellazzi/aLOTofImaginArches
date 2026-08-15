@@ -25,7 +25,7 @@
  * which is neither.)
  */
 
-import { area, centroid } from './geometry.js';
+import { piecesOf, blockArea, blockCentroid } from './geometry.js';
 
 /** Degrees to radians, kept here so the callers can speak in degrees. */
 export const toRadians = (deg) => (deg * Math.PI) / 180;
@@ -75,8 +75,8 @@ export function luneWidth(radius, angleDeg) {
  * @param {number} angleDeg  the angle of the slice
  */
 export function luneVolume(poly, axisX, angleDeg) {
-  const a = Math.abs(area(poly));
-  const g = centroid(poly);
+  const a = blockArea(poly);
+  const g = blockCentroid(poly);
   return a * toRadians(angleDeg) * Math.abs(g[0] - axisX);
 }
 
@@ -96,11 +96,13 @@ export function luneWeights(polys, opt = {}) {
   const widths = [];
   const radii = [];
   for (const p of polys) {
-    const g = centroid(p);
+    // Pieces first: a two-piece voussoir has its weight where the pieces put
+    // it, not where the first of them happens to be.
+    const g = blockCentroid(p);
     const r = Math.abs(g[0] - axisX);
     radii.push(r);
     widths.push(r * theta);
-    weights.push(Math.abs(area(p)) * theta * r * specificWeight);
+    weights.push(blockArea(p) * theta * r * specificWeight);
   }
   return { weights, widths, radii };
 }
@@ -189,9 +191,11 @@ export function solids(polys, opt = {}) {
   const {
     poleni = false, axisX = 0, angleDeg = 15, thickness = [], steps = 6,
   } = opt;
-  return polys.map((p, k) => (poleni
+  // One solid per PIECE, flattened per block, so a double shell shows as the
+  // two rings it is.
+  return polys.map((block, k) => piecesOf(block).flatMap((p) => (poleni
     ? revolve(p, axisX, angleDeg, steps)
-    : extrude(p, thickness[k] ?? 1)));
+    : extrude(p, thickness[k] ?? 1))));
 }
 
 /**

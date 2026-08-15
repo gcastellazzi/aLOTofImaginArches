@@ -260,6 +260,8 @@
       <a href="#dof">Three degrees of freedom</a>
       <a href="#admissibility">Admissibility</a>
       <a href="#bow">Reading both drawings</a>
+      <a href="#ends">Fixing both ends</a>
+      <a href="#profile">Whole profiles</a>
       <a href="#dome">Poleni's dome</a>
       <a href="#mechanism">Mechanism</a>
       <a href="#cable">Hooke's cable</a>
@@ -320,6 +322,18 @@
         boxed axes with inward ticks, a pale grid, translucent force bands — so that the pictures in the
         course slides and the pictures on screen mean the same thing.
       </p>
+      <p>
+        The control panel is in three tabs. <strong>Geometry</strong> is everything that defines the
+        section; <strong>LoT</strong> everything that moves the line of thrust; <strong>Mechanism</strong>
+        everything about collapse. A few controls appear in more than one tab &mdash; the thrust
+        slider, the choice of A and B &mdash; so the mechanism can be driven without leaving it; they
+        are the same control, not a copy, and moving either moves both.
+      </p>
+      <p>
+        Under each plot sits a row of view tools: <em>fit</em>, <em>fit the width</em>, <em>fit the
+        height</em>, and zoom. Dragging pans, as before &mdash; except on the 3-D block view, where
+        dragging turns the solid and shift-dragging pans it.
+      </p>
       <table>
         <thead>
           <tr><th>Panel section</th><th>What it does</th></tr>
@@ -327,6 +341,9 @@
         <tbody>
           <tr><td><strong>Example</strong></td><td>Load one of the stored examples.</td></tr>
           <tr><td><strong>Trace your own</strong></td><td>Load an image, trace intrados and extrados, generate blocks.</td></tr>
+          <tr><td><strong>Trace a whole profile</strong></td><td>Trace closed outlines instead, and cut them into blocks with radial cuts.</td></tr>
+          <tr><td><strong>Add a block</strong></td><td>Draw a single block of N sides.</td></tr>
+          <tr><td><strong>Points A and B</strong></td><td>Fix where the line of thrust starts and ends.</td></tr>
           <tr><td><strong>Applied forces</strong></td><td>Add point loads by clicking.</td></tr>
           <tr><td><strong>Scale and units</strong></td><td>Turn pixels into metres; choose the unit system.</td></tr>
           <tr><td><strong>Equilibrium state</strong></td><td>The three sliders that move the line of thrust.</td></tr>
@@ -563,6 +580,55 @@
         On an arch with many voussoirs not every ray is lettered — they would overlap into a smear.
         The application letters every second, third or fourth, whichever keeps the drawing readable,
         and uses the <em>same</em> spacing in both plots so the correspondence holds.
+      </div>
+    </section>
+
+    <section id="ends">
+      <h2>Fixing both ends</h2>
+      <p>
+        Press <strong>Pick A</strong> and <strong>Pick B</strong> and click the two points the line
+        of thrust must run between, then switch on <strong>Impose both ends</strong>. The thrust
+        stays yours; the other two parameters become <em>results</em>, because once the thrust and
+        the two ends are fixed there is nothing left to choose.
+      </p>
+      <p>
+        The force polygon shows how it is done, in the classical way. A <strong>trial pole</strong>
+        <em>O&prime;</em> gives a preliminary funicular &mdash; drawn dashed on the arch &mdash;
+        which misses B; the closing error says how far the pole's <em>ordinate</em> was out, and the
+        corrected pole <em>O</em> sits directly above or below it, at the same thrust.
+      </p>
+      <div class="callout">
+        <strong>Try this.</strong> With both ends imposed, move the <em>reaction</em> slider. The
+        trial pole travels a long way and the correction stretches with it &mdash; and the final
+        pole does not move at all. It cannot: the correction is exact, not a search, so wherever
+        you start from you arrive at the same place.
+      </div>
+    </section>
+
+    <section id="profile">
+      <h2>Tracing a whole profile</h2>
+      <p>
+        An intrados and an extrados describe a ring of even thickness and nothing else. For a
+        section the two faces cannot capture &mdash; a haunch filled to a horizontal extrados, a
+        pier that widens at its base, or the <strong>two shells of St Peter's dome</strong> &mdash;
+        trace the outline instead.
+      </p>
+      <ol class="steps">
+        <li><strong>Trace an outline</strong>, clicking round a closed curve, and press the button
+            again to close it. Repeat for as many curves as the section has.</li>
+        <li><strong>Pick the centre of the cuts.</strong></li>
+        <li>Set the number of blocks and press <strong>Cut into blocks</strong>.</li>
+      </ol>
+      <p>
+        Every outline is cut at the same angles, which is what makes the pieces at one cut belong to
+        the same voussoir. On a double shell each block therefore comes out in <strong>two
+        pieces</strong>, and it is weighed as both: its centroid is the centroid of the pair, which
+        for a dome is precisely the quantity the analysis turns on.
+      </p>
+      <div class="callout">
+        Where a cut crosses several shells, the joint is taken across the whole cut &mdash; the air
+        between the shells included. The admissibility check is therefore approximate on a
+        multi-shell section, and generous rather than strict.
       </div>
     </section>
 

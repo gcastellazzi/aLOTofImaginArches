@@ -438,3 +438,62 @@ test asserts it rather than trusting the algebra.
 Faces are sorted on the depth of their centroid. The painter's algorithm can be
 fooled by long interpenetrating faces; voussoirs are small convex pieces that
 do not overlap, so it is exact here and costs one sort.
+
+## Imposing both ends: `poleForEnds`
+
+A student may fix where the line of thrust starts and where it ends. The
+classical way is a trial pole and a correction, and the MATLAB version drew it:
+a preliminary funicular from A, the closing error, and the pole projected onto
+the vertical (`xy_Pole_Prime` to `xy_Pole_Def`).
+
+**It is a correction, not a search.** At a fixed thrust the height the funicular
+reaches over B's abscissa is exactly *affine* in the pole ordinate — each
+segment's slope is `(yO − s_j)/xO`, so
+
+```
+y_end = y_A + ( yO (x_B − x_A) − Σ s_j dx_j ) / xO
+```
+
+with derivative `(x_B − x_A)/xO`. Measured against the code before any of it
+was written: the slope matches to ten significant figures and the residual
+after one linear step is 10⁻¹⁵. Anything iterative here would be a
+misunderstanding, and a test asserts the point directly — **three very
+different trial poles give the same answer**.
+
+The trial the application uses is whatever the sliders are currently asking
+for, so moving the reaction slider stretches the correction while the final
+pole stays put. That is the property worth seeing, and it is on screen.
+
+## Whole profiles: `profile.js`
+
+Two traced faces describe a ring of even thickness and nothing else. For a
+filled haunch, a widening pier, or the two shells of St Peter's dome, the
+student traces the **outline** instead — as many closed curves as the section
+needs — and the joints come from rays out of a picked centre.
+
+**A block may be several pieces.** A radial cut through a double shell passes
+through masonry, air, and masonry again, so one voussoir is two disjoint
+polygons. Blocks carry an optional `pieces` array and are read through
+`piecesOf`, `blockArea` and `blockCentroid` in `geometry.js`; a block without
+pieces is its own single piece, indistinguishable from what the tracer has
+always produced. Area and centroid are additive, so the mechanics is unchanged
+— but the centroid must be **area-weighted over the pieces**, because taking
+the first alone would put the weight at the wrong radius, and for a dome that
+is the quantity everything turns on.
+
+Two traps, both found by running it:
+
+- **The determinant's sign.** `s d − u e = p − centre` solved by Cramer has
+  determinant `ex dy − dx ey`. With the sign the other way round every distance
+  comes out negative, the forward-hit filter discards them all, and the ray
+  finds nothing at all.
+- **The extreme cuts lie in the end faces.** A section traced as a closed
+  outline ends in radial faces, and the first and last rays run exactly along
+  them — parallel lines never meet, so those cuts found no material and the two
+  end voussoirs went missing. The auto-derived range is inset by a millionth of
+  the span, far below anything measurable.
+
+Where a cut crosses several shells the joint spans from the first material to
+the last, with the gaps inside it; the material itself is carried in
+`segments`. Admissibility therefore treats such a cut as continuous, which is
+the one place this is still approximate.

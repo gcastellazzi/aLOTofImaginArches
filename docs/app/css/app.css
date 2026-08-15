@@ -52,6 +52,11 @@ main {
   overflow-y: auto;
   min-height: 0;
 }
+/* The panel is three tabbed panes: Geometry, LoT, Mechanism. The tab strip
+   is the same one the right-hand pane uses. */
+#panel .tabs { position: sticky; top: 0; background: var(--panel); z-index: 2;
+  padding-bottom: 4px; margin-bottom: 8px; }
+#panel .pane[hidden] { display: none; }
 #panel section { margin-bottom: 20px; }
 #panel h2 {
   margin: 0 0 7px;
@@ -132,6 +137,28 @@ figure {
   display: flex;
   flex-direction: column;
 }
+/* The per-plot view tools, tucked under the canvas. */
+.viewtools {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.viewtools button {
+  padding: 1px 7px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 3px;
+}
+.viewtools button:hover { background: #eee; }
+.viewtools .hint { margin: 0 0 0 4px; font-size: 11px; }
+.viewtools[hidden] { display: none; }
+
 figcaption {
   margin-top: 5px;
   font-size: 12px;
